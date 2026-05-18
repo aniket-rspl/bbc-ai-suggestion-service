@@ -1,0 +1,22 @@
+spring:
+  application:
+    name: bbc-ai-suggestion-service
+    profiles:
+      active: local
+
+  ai:
+    ollama:
+      base-url: http://172.16.8.90:11434
+      chat:
+        options:
+          model: gemma3:27b
+          temperature: 0.1
+    retry:
+      max-attempts: 1
+
+server:
+  port: 8085
+
+bbc:
+  ai:
+    prompt-version: v1-direct-llm
