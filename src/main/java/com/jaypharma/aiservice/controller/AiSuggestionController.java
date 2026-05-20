@@ -1,8 +1,8 @@
 package com.jaypharma.aiservice.controller;
 
-import com.jaypharma.aiservice.dto.AiSuggestionRequest;
-import com.jaypharma.aiservice.dto.AiSuggestionResponse;
-import com.jaypharma.aiservice.service.DirectLlmSuggestionService;
+import com.jaypharma.aiservice.dto.suggestion.AiSuggestionRequest;
+import com.jaypharma.aiservice.dto.suggestion.AiSuggestionResponse;
+import com.jaypharma.aiservice.service.llm.DirectLlmSuggestionService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PostMapping;

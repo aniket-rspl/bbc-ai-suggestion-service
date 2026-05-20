@@ -1,6 +1,8 @@
-package com.jaypharma.aiservice.dto;
+package com.jaypharma.aiservice.dto.suggestion;
 
 
+import com.jaypharma.aiservice.dto.module.SuggestionModule;
+import com.jaypharma.aiservice.dto.model.TargetItemDto;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 

@@ -9,8 +9,13 @@ spring:
       base-url: http://172.16.8.90:11434
       chat:
         options:
-          model: gemma3:27b
+          model: gemma3:4b
           temperature: 0.1
+      embedding:
+        options:
+          model: mxbai-embed-large:latest
+    model:
+      embedding: ollama
     retry:
       max-attempts: 1
 
@@ -19,4 +24,4 @@ server:
 
 bbc:
   ai:
-    prompt-version: v1-direct-llm
+    prompt-version: v2-rag-001
