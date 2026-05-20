@@ -1,17 +1,17 @@
-package com.jaypharma.aiservice.service;
+package com.jaypharma.aiservice.service.llm;
 
-import com.jaypharma.aiservice.dto.AiSuggestionRequest;
-import com.jaypharma.aiservice.dto.AiSuggestionResponse;
+import com.jaypharma.aiservice.dto.suggestion.AiSuggestionRequest;
+import com.jaypharma.aiservice.dto.suggestion.AiSuggestionResponse;
+import com.jaypharma.aiservice.utility.RagContextBuilder;
+import com.jaypharma.aiservice.utility.SuggestionPromptBuilder;
+import com.jaypharma.aiservice.utility.SuggestionResponseSanitizer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.stereotype.Service;
 import tools.jackson.databind.ObjectMapper;
-
-import java.util.*;
-
-@Service
 @Slf4j
+@Service
 @RequiredArgsConstructor
 public class DirectLlmSuggestionService {
 
@@ -19,11 +19,13 @@ public class DirectLlmSuggestionService {
     private final ObjectMapper objectMapper;
     private final SuggestionPromptBuilder promptBuilder;
     private final SuggestionResponseSanitizer sanitizer;
+    private final RagContextBuilder ragContextBuilder;
 
     public AiSuggestionResponse suggest(AiSuggestionRequest request) {
         ChatClient chatClient = chatClientBuilder.build();
 
-        String prompt = promptBuilder.build(request);
+        String ragContext = ragContextBuilder.build(request);
+        String prompt = promptBuilder.build(request, ragContext);
 
         log.info(
                 "Calling LLM. module={}, borrowerId={}, sourceItemCount={}, targetItemCount={}",
@@ -52,13 +54,19 @@ public class DirectLlmSuggestionService {
                         12. alternatives must contain only target item keys.
                         13. If no suitable mapping exists, return null target key and LOW confidence.
                         14. Do not request or use borrower transactional financial data.
+                        15. Historical mappings are guidance only, not source of truth.
+                        16. Admin approval is mandatory for every suggestion.
                         """)
                 .user(prompt)
                 .call()
                 .content();
 
-        log.debug("Raw LLM response. module={}, borrowerId={}, response={}",
-                request.module(), request.borrowerId(), rawResponse);
+        log.debug(
+                "Raw LLM response. module={}, borrowerId={}, response={}",
+                request.module(),
+                request.borrowerId(),
+                rawResponse
+        );
 
         AiSuggestionResponse response = parseResponse(rawResponse);
         return sanitizer.sanitize(request, response);
@@ -70,7 +78,7 @@ public class DirectLlmSuggestionService {
             return objectMapper.readValue(cleanedResponse, AiSuggestionResponse.class);
         } catch (Exception ex) {
             log.error("Failed to parse LLM response. rawResponse={}", rawResponse, ex);
-            throw new IllegalStateException("LLM returned invalid response format");
+            throw new IllegalStateException("Failed to parse LLM response", ex);
         }
     }
 

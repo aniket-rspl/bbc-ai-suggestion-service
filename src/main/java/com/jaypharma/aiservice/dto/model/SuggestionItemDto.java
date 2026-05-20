@@ -1,4 +1,4 @@
-package com.jaypharma.aiservice.dto;
+package com.jaypharma.aiservice.dto.model;
 
 import java.util.List;
 
