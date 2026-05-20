@@ -1,9 +1,9 @@
-package com.jaypharma.aiservice.service;
+package com.jaypharma.aiservice.utility;
 
-import com.jaypharma.aiservice.dto.AiSuggestionRequest;
-import com.jaypharma.aiservice.dto.AiSuggestionResponse;
-import com.jaypharma.aiservice.dto.SuggestionItemDto;
-import com.jaypharma.aiservice.dto.TargetItemDto;
+import com.jaypharma.aiservice.dto.suggestion.AiSuggestionRequest;
+import com.jaypharma.aiservice.dto.suggestion.AiSuggestionResponse;
+import com.jaypharma.aiservice.dto.model.SuggestionItemDto;
+import com.jaypharma.aiservice.dto.model.TargetItemDto;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 

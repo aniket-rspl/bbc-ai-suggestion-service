@@ -1,4 +1,6 @@
-package com.jaypharma.aiservice.dto;
+package com.jaypharma.aiservice.dto.suggestion;
+
+import com.jaypharma.aiservice.dto.model.SuggestionItemDto;
 
 import java.util.List;
 
