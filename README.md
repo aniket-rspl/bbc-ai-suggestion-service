@@ -168,6 +168,290 @@ Stores admin-approved and admin-corrected mappings for future RAG retrieval. **O
 
 ---
 
+
+### 1. AI Suggestion Payload
+
+**AI Suggestion Request: Column Mapping**
+
+```json
+{
+  "module": "COLUMN_MAPPING",
+  "borrowerId": 101,
+  "borrowerName": "ABC Foods",
+  "collateralType": "AR",
+  "fileCategory": "AR Ledger",
+  "workbookName": "abc-foods-ar-ledger.xlsx",
+  "sourceItems": [
+    "Trans. tp",
+    "Doc no.",
+    "DD",
+    "Op bal",
+    "credits"
+  ],
+  "targetItems": [
+    {
+      "key": "TRANSACTION_TYPE",
+      "name": "Transaction Type",
+      "dataType": "TEXT",
+      "description": "Type of transaction. Examples: Invoice, General Journal, Payment, Credit Memo."
+    },
+    {
+      "key": "DOCUMENT_NUMBER",
+      "name": "Document Number",
+      "dataType": "TEXT",
+      "description": "Unique document identifier."
+    },
+    {
+      "key": "DUE_DATE",
+      "name": "Due Date",
+      "dataType": "DATE",
+      "description": "Date on which payment is due."
+    },
+    {
+      "key": "OPENING_AMOUNT",
+      "name": "Opening Amount",
+      "dataType": "DECIMAL",
+      "description": "Opening amount or opening balance."
+    },
+    {
+      "key": "CREDIT_AMOUNT",
+      "name": "Credit Amount",
+      "dataType": "DECIMAL",
+      "description": "Credit amount or credit memo amount."
+    }
+  ]
+}
+
+```
+
+**AI Suggestion Response: Column Mapping**
+
+```json
+{
+  "module": "COLUMN_MAPPING",
+  "promptVersion": "v2-rag-001",
+  "suggestions": [
+    {
+      "sourceItem": "Trans. tp",
+      "suggestedTargetKey": "TRANSACTION_TYPE",
+      "suggestedTargetName": "Transaction Type",
+      "confidenceBand": "HIGH",
+      "reason": "Trans. tp is a common abbreviation for transaction type.",
+      "alternatives": [],
+      "warningRequired": false,
+      "warningMessage": null
+    },
+    {
+      "sourceItem": "Doc no.",
+      "suggestedTargetKey": "DOCUMENT_NUMBER",
+      "suggestedTargetName": "Document Number",
+      "confidenceBand": "HIGH",
+      "reason": "Doc no. refers to document number.",
+      "alternatives": [],
+      "warningRequired": false,
+      "warningMessage": null
+    },
+    {
+      "sourceItem": "DD",
+      "suggestedTargetKey": "DUE_DATE",
+      "suggestedTargetName": "Due Date",
+      "confidenceBand": "MEDIUM",
+      "reason": "DD may represent due date in AR context, but it can be ambiguous.",
+      "alternatives": [],
+      "warningRequired": true,
+      "warningMessage": "Manual review required because DD is ambiguous."
+    }
+  ]
+}
+
+```
+
+**AI Suggestion Request: Sheet Mapping**
+
+```json
+{
+  "module": "SHEET_MAPPING",
+  "borrowerId": 101,
+  "borrowerName": "ABC Foods",
+  "collateralType": "AR",
+  "workbookName": "abc-foods-month-end-pack.xlsx",
+  "sourceItems": [
+    "AR Aging Jan",
+    "Stock Summary",
+    "Borrowing Base Cert",
+    "Bank Reconciliation",
+    "Random Notes"
+  ],
+  "targetItems": [
+    {
+      "key": "AR_LEDGER",
+      "name": "AR Ledger",
+      "dataType": "FILE",
+      "description": "Accounts Receivable Ledger or Aging Report detailing outstanding invoices."
+    },
+    {
+      "key": "INVENTORY_REPORT",
+      "name": "Inventory Report",
+      "dataType": "FILE",
+      "description": "Stock summary or inventory valuation report."
+    },
+    {
+      "key": "BBC_REPORT",
+      "name": "BBC Report",
+      "dataType": "FILE",
+      "description": "Borrowing Base Certificate detailing eligible collateral."
+    },
+    {
+      "key": "BANK_STATEMENT",
+      "name": "Bank Statement",
+      "dataType": "FILE",
+      "description": "Monthly bank statements or reconciliation files."
+    }
+  ]
+}
+
+```
+
+**AI Suggestion Response: Sheet Mapping**
+
+```json
+{
+  "module": "SHEET_MAPPING",
+  "promptVersion": "v2-rag-001",
+  "suggestions": [
+    {
+      "sourceItem": "AR Aging Jan",
+      "suggestedTargetKey": "AR_LEDGER",
+      "suggestedTargetName": "AR Ledger",
+      "confidenceBand": "HIGH",
+      "reason": "AR Aging is a standard term for an Accounts Receivable Ledger.",
+      "alternatives": [],
+      "warningRequired": false,
+      "warningMessage": null
+    },
+    {
+      "sourceItem": "Stock Summary",
+      "suggestedTargetKey": "INVENTORY_REPORT",
+      "suggestedTargetName": "Inventory Report",
+      "confidenceBand": "HIGH",
+      "reason": "Stock Summary directly relates to inventory reporting.",
+      "alternatives": [],
+      "warningRequired": false,
+      "warningMessage": null
+    },
+    {
+      "sourceItem": "Borrowing Base Cert",
+      "suggestedTargetKey": "BBC_REPORT",
+      "suggestedTargetName": "BBC Report",
+      "confidenceBand": "HIGH",
+      "reason": "Exact match for Borrowing Base Certificate acronym (BBC).",
+      "alternatives": [],
+      "warningRequired": false,
+      "warningMessage": null
+    },
+    {
+      "sourceItem": "Bank Reconciliation",
+      "suggestedTargetKey": "BANK_STATEMENT",
+      "suggestedTargetName": "Bank Statement",
+      "confidenceBand": "HIGH",
+      "reason": "Bank Reconciliations are typically derived from or act as Bank Statements.",
+      "alternatives": [],
+      "warningRequired": false,
+      "warningMessage": null
+    },
+    {
+      "sourceItem": "Random Notes",
+      "suggestedTargetKey": null,
+      "suggestedTargetName": null,
+      "confidenceBand": "LOW",
+      "reason": "Random Notes does not map to any standard financial collateral file category.",
+      "alternatives": [],
+      "warningRequired": true,
+      "warningMessage": "No suitable mapping found. Manual review required."
+    }
+  ]
+}
+
+```
+
+---
+
+### 2. AI Learning Payload 
+
+**Learning Request**
+
+```json
+{
+  "module": "COLUMN_MAPPING",
+  "borrowerId": 304,
+  "borrowerName": "Evergreen Distribution",
+  "collateralType": "AR",
+  "fileCategory": "AR Ledger",
+  "workbookName": "evergreen-ar-open-items.xlsx",
+  "promptVersion": "v2-rag-001",
+  "approvedBy": "local-test-admin",
+  "suggestions": [
+    {
+      "sourceItem": "Transaction Code",
+      "originalSuggestedTargetKey": "TRANSACTION_TYPE",
+      "originalSuggestedTargetName": "Transaction Type",
+      "acceptedTargetKey": "TRANSACTION_TYPE",
+      "acceptedTargetName": "Transaction Type",
+      "decisionType": "ACCEPTED",
+      "confidenceBand": "LOW",
+      "reason": "Admin confirmed Transaction Code represents transaction type in this AR ledger.",
+      "alternatives": [],
+      "warningRequired": false,
+      "warningMessage": null
+    },
+    {
+      "sourceItem": "Reference No",
+      "originalSuggestedTargetKey": "DOCUMENT_NUMBER",
+      "originalSuggestedTargetName": "Document Number",
+      "acceptedTargetKey": "DOCUMENT_NUMBER",
+      "acceptedTargetName": "Document Number",
+      "decisionType": "ACCEPTED",
+      "confidenceBand": "MEDIUM",
+      "reason": "Admin confirmed Reference No is used as the document number.",
+      "alternatives": [],
+      "warningRequired": false,
+      "warningMessage": null
+    },
+    {
+      "sourceItem": "Credit",
+      "originalSuggestedTargetKey": "CREDIT_AMOUNT",
+      "originalSuggestedTargetName": "Credit Amount",
+      "acceptedTargetKey": "CREDIT_AMOUNT",
+      "acceptedTargetName": "Credit Amount",
+      "decisionType": "ACCEPTED",
+      "confidenceBand": "HIGH",
+      "reason": "Admin confirmed Credit represents credit amount.",
+      "alternatives": [],
+      "warningRequired": false,
+      "warningMessage": null
+    }
+  ]
+}
+
+```
+
+**Learning Response**
+
+```json
+{
+  "status": "INGESTED",
+  "requestedCount": 3,
+  "ingestedCount": 3,
+  "learningIds": [
+    "7e29b7e4-b13a-4b35-94fb-4af3ce4456a1",
+    "cbda5d4f-40c1-49fd-a99f-507e476b9a3d",
+    "a7b4f52a-64e7-4063-b622-e7aa9927fcde"
+  ]
+}
+
+```
+---
+
 ## 🧠 RAG Strategy
 
 ### Why Per-Source-Item Retrieval?
