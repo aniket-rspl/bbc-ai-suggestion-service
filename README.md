@@ -1,27 +1,90 @@
-# 🧠 BBC AI Suggestion Service (V1 Prototype)
+# 🧠 BBC AI Suggestion Service — V2 RAG Prototype
 
-> 
-> **BBC Verification Platform — Phase 2: AI Assistant & Suggestion Engine** 
-> 
-> 
+**BBC Verification Platform — Phase 2: AI Assistant & Suggestion Engine**
 
-This repository contains the V1 Prototype of the AI Suggestion Service for the Jay Pharma Collective BBC (Borrowing Base Certificate) Verification Platform.
+This repository contains the **V2 Prototype** of the AI Suggestion Service for the Jay Pharma Collective BBC (Borrowing Base Certificate) Verification Platform.
 
-This microservice acts as a **human-in-the-loop** AI assistant. It helps platform administrators configure borrower data by analyzing structural metadata (like column headers and Excel sheet names) and suggesting the most appropriate standard canonical fields.
+This microservice acts as a **human-in-the-loop AI assistant**. It helps platform administrators configure borrower data by analyzing structural metadata such as uploaded file column headers, Excel workbook sheet names, canonical field definitions, and **admin-approved historical mappings**.
 
-**⚠️ Critical Security Notice:** This AI service operates *strictly* on metadata. **No transactional financial data** (e.g., invoice amounts, balances, customer names) is ever processed by or transmitted to the LLM. Furthermore, the AI is purely a suggestion engine; all final configurations require explicit human administrative approval.
+The AI service suggests the most appropriate target mappings, but it does **not** make final decisions. All mappings must be reviewed, accepted, corrected, or rejected by an administrator.
 
 ---
 
-## 🏗️ Architecture & Tech Stack (V1)
+## ⚠️ Critical Security Notice
 
-Prototype V1 is designed as a direct LLM-inference application without historical context (RAG) or deterministic preprocessing (which are slated for V2 and V3).
+This AI service operates strictly on **metadata**.
 
-* **Core Framework:** Java 17, Spring Boot 3.x 
-* **AI Integration:** Spring AI 
-* **Local LLM Provider:** Ollama (for isolated, zero-cost local development) 
-* **Recommended Local Model:** `llama3.2:latest` (or `gemma3:12b` / `phi4:latest` depending on hardware)
-* **Response Guardrails:** Custom `SuggestionResponseSanitizer` to enforce strict JSON contracts and prevent LLM hallucinations.
+The service must not process or transmit borrower transactional financial data to the LLM, including but not limited to:
+
+* Invoice amounts
+* Customer names from transaction rows
+* Balances
+* Payments
+* Transaction-level financial records
+
+Only structural metadata is used, such as header names, sheet names, canonical field names/descriptions, file category names, and historical admin-approved mappings. The AI is purely a **suggestion engine**. The administrator’s decision is always final.
+
+---
+
+## 🏗️ Architecture & Tech Stack
+
+V2 extends the V1 direct LLM prototype by adding **Retrieval-Augmented Generation (RAG)** using historical admin-approved mappings.
+
+### Core Stack
+
+* Java 17
+* Spring Boot 4.x
+* Spring AI
+* Maven Wrapper
+
+### Local AI & Vector Components
+
+* **Local LLM Execution:** Ollama
+* **Vector Generation:** Ollama Embeddings
+* **Vector Database:** Spring AI `VectorStore` (`SimpleVectorStore` for local prototype/demo storage)
+
+### Recommended Local Models
+
+* **Chat Model:** `llama3.2:latest` (Alternatives: `gemma3:12b`, `phi4:latest`)
+* **Embedding Model:** `mxbai-embed-large:latest` (Alternative: `bge-m3:latest`)
+
+---
+
+## 🧭 V2 High-Level Flow
+
+### 1. Suggestion Flow
+
+1. Admin uploads file metadata.
+2. System extracts headers / sheet names.
+3. Suggestion API receives `sourceItems` + `targetItems`.
+4. **Per-source-item vector retrieval** fetches compact approved historical mapping hints.
+5. Single LLM call generates sanitized structured suggestions.
+6. Admin reviews, accepts, or corrects the mappings.
+
+### 2. Learning Flow
+
+1. Admin accepts or corrects suggestions.
+2. Frontend sends **one batch learning request**.
+3. Backend stores each approved/corrected mapping as a separate vector document in the `VectorStore`.
+4. Future RAG suggestions improve based on this learned context.
+
+> **Note:** The learning endpoint is intentionally batch-based. The UI should not call the backend once per suggestion row. Instead, after the admin completes the review, all accepted and corrected mappings are sent in one single request.
+
+---
+
+## ✅ What V2 Adds Over V1
+
+**V1 Flow:** `Request -> Direct LLM -> JSON Response -> Sanitizer`
+
+**V2 Flow:** `Request -> Per-source-item RAG retrieval -> Compact historical mapping hints -> Direct LLM -> JSON Response -> Sanitizer -> Admin Review -> Batch Learning API -> Vector Store`
+
+**Key V2 Improvements:**
+
+* Learns from admin-approved and admin-corrected mappings.
+* Performs per-source-item retrieval instead of one global retrieval to ensure no mappings are missed.
+* Stores each approved mapping as an individual vector document.
+* Uses compact RAG hints to avoid large prompts, keeping operations fast and cost-effective.
+* Maintains one LLM call per suggestion request and one learning API call per admin review batch.
 
 ---
 
@@ -29,167 +92,128 @@ Prototype V1 is designed as a direct LLM-inference application without historica
 
 ### Prerequisites
 
-* **Java 17** SDK installed.
-* **Maven** (Included via wrapper).
-* **Ollama** running locally or accessible via your organization's network.
+* Java 17 SDK installed.
+* Ollama running locally or accessible through the organization network.
+* Required Ollama chat and embedding models pulled (`ollama pull gemma3:4b` and `ollama pull mxbai-embed-large:latest`).
 
-### Setup & Configuration
+### ⚙️ Local Configuration
 
-1. **Clone the repository:**
-```bash
-git clone https://github.com/aniket-rspl/bbc-ai-suggestion-service.git
-cd bbc-ai-suggestion-service
+Update your `src/main/resources/application-local.yml` to include the vector store and embedding configurations:
 
-```
-
-
-2. **Configure your Local Environment:**
-Ensure your `src/main/resources/application-local.yml` points to your active Ollama instance.
 ```yaml
+server:
+  port: 8085
+
 spring:
+  application:
+    name: bbc-ai-suggestion-service
   ai:
     ollama:
-      base-url: http://172.16.8.90:11434  # Replace with your local or org Ollama IP
+      base-url: http://172.16.8.90:11434
       chat:
         options:
-          model: llama3.2:latest
-          temperature: 0  # Kept at 0 for maximum determinism in V1
+          model: gemma3:4b
+          temperature: 0
+      embedding:
+        options:
+          model: mxbai-embed-large:latest
+    model:
+      embedding: ollama
 
 ```
+### ▶️ Run the Application
 
-
-3. **Run the Application:**
-Start the service using any IDE.
-
-The application will start on `http://localhost:8085`.
+The service will start on `http://localhost:8085`.
 
 ---
 
 ## 🔌 API Documentation
 
-V1 exposes a single, polymorphic REST endpoint designed to handle multiple suggestion tasks based on the `module` parameter.
+### 1. Generate AI Suggestions
 
-### **POST** `/api/v1/ai/suggestions`
+`POST /api/v1/ai/suggestions`
 
-Generates AI mapping suggestions based on provided source items and a constrained list of allowed target configurations.
+Generates AI mapping suggestions based on source items, allowed target items, and historical RAG context.
 
-#### **Request Headers**
+**Request Headers:** `Content-Type: application/json`
 
-* `Content-Type: application/json`
-
-#### **Request Body Schema (`AiSuggestionRequest`)**
+**Request Body Schema (`AiSuggestionRequest`)**
 
 | Field | Type | Required | Description |
 | --- | --- | --- | --- |
-| `module` | String (Enum) | **Yes** | `COLUMN_MAPPING` or `SHEET_MAPPING`. Dictates the AI's prompt behavior. |
-| `borrowerId` | Long | Yes | Unique identifier for the borrower configuration. |
-| `borrowerName` | String | Yes | Name of the borrowing entity context. |
-| `collateralType` | String | Yes | E.g., `AR`, `Inventory`.|
-| `fileCategory` | String | Yes | E.g., `AR Ledger`, `Bank Statement`.|
-| `workbookName` | String | No | Needed primarily for `SHEET_MAPPING` context. |
-| `sourceItems` | Array of Strings | **Yes** | The raw headers or sheet names extracted from the uploaded file.|
-| `targetItems` | Array of Objects | **Yes** | The available canonical fields or categories the AI is allowed to choose from. |
+| `module` | String (Enum) | Yes | `COLUMN_MAPPING` or `SHEET_MAPPING` |
+| `borrowerId` | Long | No | Borrower identifier |
+| `borrowerName` | String | No | Borrower name context |
+| `collateralType` | String | No | Example: `AR`, `Inventory` |
+| `fileCategory` | String | No | Example: `AR Ledger`, `Bank Statement` |
+| `workbookName` | String | No | Uploaded workbook name |
+| `sourceItems` | Array of Strings | Yes | Headers or sheet names extracted from uploaded file |
+| `targetItems` | Array of Objects | Yes | Canonical fields/categories the AI is allowed to choose from |
 
-**Example Request: Column Mapping**
+### 2. Batch Learning API
 
-```json
-{
-  "module": "COLUMN_MAPPING",
-  "borrowerId": 101,
-  "borrowerName": "ABC Foods",
-  "collateralType": "AR",
-  "fileCategory": "AR Ledger",
-  "sourceItems": [
-    "Trans. tp",
-    "Doc no.",
-    "DD"
-  ],
-  "targetItems": [
-    {
-      "key": "TRANSACTION_TYPE",
-      "name": "Transaction Type",
-      "dataType": "TEXT",
-      "description": "Type of transaction. Examples: Invoice, General Journal, Payment."
-    },
-    {
-      "key": "DOCUMENT_NUMBER",
-      "name": "Document Number",
-      "dataType": "TEXT",
-      "description": "Unique document identifier."
-    },
-    {
-      "key": "DUE_DATE",
-      "name": "Due Date",
-      "dataType": "DATE",
-      "description": "Date on which transaction should happen."
-    }
-  ]
-}
+`POST /api/v1/ai/learning/approved-mappings`
 
-```
+Stores admin-approved and admin-corrected mappings for future RAG retrieval. **Only send mappings that the admin has accepted or corrected.** Do not send rejected or null mappings (e.g., `Remarks -> null`).
 
-#### **Response Body Schema (`AiSuggestionResponse`)**
+**Request Body Schema (`AiLearningRequest`)**
 
-The response is sanitized by the backend to ensure the AI only returns keys that exactly match the provided `targetItems`.
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `module` | String (Enum) | Yes | Suggestion module (`COLUMN_MAPPING` or `SHEET_MAPPING`) |
+| `borrowerId` | Long | No | Borrower identifier |
+| `promptVersion` | String | No | Prompt version returned by the suggestion API |
+| `approvedBy` | String | No | Admin/user who approved the mappings |
+| `suggestions` | Array of Objects | Yes | The accepted/corrected mappings |
 
-**Example Response:**
+---
 
-```json
-{
-  "module": "COLUMN_MAPPING",
-  "promptVersion": "v1.0",
-  "suggestions": [
-    {
-      "sourceItem": "Trans. tp",
-      "suggestedTargetKey": "TRANSACTION_TYPE",
-      "suggestedTargetName": "Transaction Type",
-      "confidenceBand": "HIGH",
-      "reason": "Trans. tp is a common abbreviation for Transaction Type.",
-      "alternatives": [],
-      "warningRequired": false,
-      "warningMessage": null
-    },
-    {
-      "sourceItem": "Doc no.",
-      "suggestedTargetKey": "DOCUMENT_NUMBER",
-      "suggestedTargetName": "Document Number",
-      "confidenceBand": "HIGH",
-      "reason": "Doc no. directly refers to a Document Number.",
-      "alternatives": [],
-      "warningRequired": false,
-      "warningMessage": null
-    },
-    {
-      "sourceItem": "DD",
-      "suggestedTargetKey": "DUE_DATE",
-      "suggestedTargetName": "Due Date",
-      "confidenceBand": "MEDIUM",
-      "reason": "DD often stands for Due Date in AR ledgers, but could also mean Direct Debit.",
-      "alternatives": [],
-      "warningRequired": true,
-      "warningMessage": "Requires manual review due to ambiguous abbreviation."
-    }
-  ]
-}
+## 🧠 RAG Strategy
 
-```
+### Why Per-Source-Item Retrieval?
+
+A single global vector search (e.g., *all sourceItems + all targetItems -> top 8 historical mappings*) is unreliable. If a request has 20 headers, an important mapping might be missed. V2 solves this by performing a vector similarity search for **each individual source item**, retrieving the top 1–2 historical hints specifically for that item.
+
+### Compact RAG Context
+
+Instead of injecting full historical JSON documents into the LLM prompt, the system injects highly compact mapping hints. This keeps the prompt smaller, cheaper, and easier for the LLM to follow:
+
+> *Approved historical mapping hints:*
+> *- Current source item "Transaction Code" is similar to learned "Trx Cd" -> TRANSACTION_TYPE.*
+> *- Current source item "Reference No" is similar to learned "Ref Num" -> DOCUMENT_NUMBER.*
 
 ---
 
 ## 🛡️ Guardrails & Error Handling
 
-To compensate for the unpredictable nature of pure LLM inference in V1, the application implements strict error handling and sanitization:
+To compensate for LLM variability, the application enforces strict contracts via the `SuggestionResponseSanitizer`:
 
-1. **JSON Extraction:** Strips out markdown formatting and conversational text from the Ollama response.
-2. **Contract Enforcement:** If the LLM invents a target key (hallucination), the `SuggestionResponseSanitizer` drops the invalid key and sets the mapping to `null` with a `LOW` confidence warning.
-3. **1-to-1 Mapping Guarantee:** Ensures the system returns exactly one suggestion object for every source item provided in the request payload.
+* **JSON Extraction:** Automatically strips markdown formatting (e.g., ```json) to extract raw JSON objects.
+* **1-to-1 Mapping Guarantee:** Ensures the response contains exactly one suggestion per source item.
+* **Hallucination Prevention:** If the LLM invents a target key not present in `targetItems`, the sanitizer drops the key, downgrades the confidence to `LOW`, and flags it for manual review.
 
 ---
 
 ## 🗺️ Roadmap
 
-* **Phase 1 (Current):** Foundation & Direct LLM Integration.
+**Phase 1 — Completed**
 
-* **Phase 2:** Implement Retrieval-Augmented Generation (RAG) using historical approved mappings.
+* Direct LLM suggestion endpoint.
+* Generic `COLUMN_MAPPING` and `SHEET_MAPPING` support.
+* Strict JSON sanitization and local Ollama integration.
 
-* **Phase 3:** Introduce deterministic matching (Regex/Fuzzy/Synonyms) to bypass the LLM entirely for obvious matches.
+**Phase 2 — Current**
+
+* **RAG-based improvement** using admin-approved mappings.
+* Batch learning endpoint and vector store ingestion.
+* Per-source-item retrieval with compact RAG hints.
+
+**Phase 3 — Next (V3)**
+
+* **Deterministic preprocessing and matching.**
+* Header normalization, abbreviation expansion, and synonym dictionaries.
+* **Skip LLM for high-confidence deterministic matches** to save compute time, sending only unresolved or ambiguous items to the RAG + LLM engine.
+
+```
+
+```
