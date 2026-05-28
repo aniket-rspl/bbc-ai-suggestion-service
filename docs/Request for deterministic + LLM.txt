@@ -1,0 +1,741 @@
+Request for deterministic + LLM
+
+{
+  "borrowerId": 712,
+  "borrowerName": "Harborline Wholesale",
+  "collateralType": "AR",
+  "fileCategory": "AR Open Items",
+  "workbookName": "harborline-ar-may-2026.xlsx",
+  "module": "COLUMN_MAPPING",
+  "sourceItems": [
+    "Ref Num",
+    "Txn Type",
+    "Client NM",
+    "Inv Dt",
+    "Pmt Due Dt",
+    "Op Bal",
+    "Credit Amt",
+    "Bal Remaining",
+    "Ship Zone",
+    "Batch Cd",
+    "CR",
+    "DD",
+    "Misc Notes",
+    "Invt Qty"
+  ],
+  "targetItems": [
+    {
+      "key": "DOCUMENT_NUMBER",
+      "name": "Document Number",
+      "dataType": "TEXT",
+      "description": "Unique document or reference number on the invoice or ledger row."
+    },
+    {
+      "key": "TRANSACTION_TYPE",
+      "name": "Transaction Type",
+      "dataType": "TEXT",
+      "description": "Invoice, payment, credit memo, or other transaction category."
+    },
+    {
+      "key": "CUSTOMER_NAME",
+      "name": "Customer Name",
+      "dataType": "TEXT",
+      "description": "Buyer or debtor name associated with the row."
+    },
+    {
+      "key": "INVOICE_DATE",
+      "name": "Invoice Date",
+      "dataType": "DATE",
+      "description": "Date the invoice was issued."
+    },
+    {
+      "key": "DUE_DATE",
+      "name": "Due Date",
+      "dataType": "DATE",
+      "description": "Payment due date for the invoice."
+    },
+    {
+      "key": "OPENING_AMOUNT",
+      "name": "Opening Amount",
+      "dataType": "DECIMAL",
+      "description": "Opening balance at period start."
+    },
+    {
+      "key": "CREDIT_AMOUNT",
+      "name": "Credit Amount",
+      "dataType": "DECIMAL",
+      "description": "Credit or payment amount applied."
+    },
+    {
+      "key": "OUTSTANDING_AMOUNT",
+      "name": "Outstanding Amount",
+      "dataType": "DECIMAL",
+      "description": "Unpaid balance remaining on the invoice."
+    },
+    {
+      "key": "SHIP_TO_REGION",
+      "name": "Ship To Region",
+      "dataType": "TEXT",
+      "description": "Geographic ship-to zone or territory code."
+    },
+    {
+      "key": "BATCH_CODE",
+      "name": "Batch Code",
+      "dataType": "TEXT",
+      "description": "Internal batch or lot identifier for posting."
+    }
+  ]
+}
+
+Its response:
+
+{
+    "module": "COLUMN_MAPPING",
+    "promptVersion": "v3-deterministic-001",
+    "suggestions": [
+        {
+            "sourceItem": "Ref Num",
+            "suggestedTargetKey": "DOCUMENT_NUMBER",
+            "suggestedTargetName": "Document Number",
+            "confidenceBand": "HIGH",
+            "reason": "Matched by deterministic NORMALIZED_EXACT: Document Number.",
+            "alternatives": [],
+            "warningRequired": false,
+            "warningMessage": null
+        },
+        {
+            "sourceItem": "Txn Type",
+            "suggestedTargetKey": "TRANSACTION_TYPE",
+            "suggestedTargetName": "Transaction Type",
+            "confidenceBand": "HIGH",
+            "reason": "Matched by deterministic NORMALIZED_EXACT: Transaction Type.",
+            "alternatives": [],
+            "warningRequired": false,
+            "warningMessage": null
+        },
+        {
+            "sourceItem": "Client NM",
+            "suggestedTargetKey": "CUSTOMER_NAME",
+            "suggestedTargetName": "Customer Name",
+            "confidenceBand": "HIGH",
+            "reason": "Matched by deterministic NORMALIZED_EXACT: Customer Name.",
+            "alternatives": [],
+            "warningRequired": false,
+            "warningMessage": null
+        },
+        {
+            "sourceItem": "Inv Dt",
+            "suggestedTargetKey": "INVOICE_DATE",
+            "suggestedTargetName": "Invoice Date",
+            "confidenceBand": "HIGH",
+            "reason": "Matched by deterministic NORMALIZED_EXACT: Invoice Date.",
+            "alternatives": [],
+            "warningRequired": false,
+            "warningMessage": null
+        },
+        {
+            "sourceItem": "Pmt Due Dt",
+            "suggestedTargetKey": "INVOICE_DATE",
+            "suggestedTargetName": "Invoice Date",
+            "confidenceBand": "MEDIUM",
+            "reason": "Pmt Due Dt likely represents the invoice date.",
+            "alternatives": [],
+            "warningRequired": false,
+            "warningMessage": null
+        },
+        {
+            "sourceItem": "Op Bal",
+            "suggestedTargetKey": "OPENING_AMOUNT",
+            "suggestedTargetName": "Opening Amount",
+            "confidenceBand": "HIGH",
+            "reason": "Matched by deterministic NORMALIZED_EXACT: Opening Amount.",
+            "alternatives": [],
+            "warningRequired": false,
+            "warningMessage": null
+        },
+        {
+            "sourceItem": "Credit Amt",
+            "suggestedTargetKey": "CREDIT_AMOUNT",
+            "suggestedTargetName": "Credit Amount",
+            "confidenceBand": "HIGH",
+            "reason": "Matched by deterministic NORMALIZED_EXACT: Credit Amount.",
+            "alternatives": [],
+            "warningRequired": false,
+            "warningMessage": null
+        },
+        {
+            "sourceItem": "Bal Remaining",
+            "suggestedTargetKey": "OUTSTANDING_AMOUNT",
+            "suggestedTargetName": "Outstanding Amount",
+            "confidenceBand": "HIGH",
+            "reason": "Matched by deterministic NORMALIZED_EXACT: Outstanding Amount.",
+            "alternatives": [],
+            "warningRequired": false,
+            "warningMessage": null
+        },
+        {
+            "sourceItem": "Ship Zone",
+            "suggestedTargetKey": "SHIP_TO_REGION",
+            "suggestedTargetName": "Ship To Region",
+            "confidenceBand": "HIGH",
+            "reason": "Ship Zone is a common term for ship-to region.",
+            "alternatives": [],
+            "warningRequired": false,
+            "warningMessage": null
+        },
+        {
+            "sourceItem": "Batch Cd",
+            "suggestedTargetKey": "BATCH_CODE",
+            "suggestedTargetName": "Batch Code",
+            "confidenceBand": "HIGH",
+            "reason": "Matched by deterministic NORMALIZED_EXACT: Batch Code.",
+            "alternatives": [],
+            "warningRequired": false,
+            "warningMessage": null
+        },
+        {
+            "sourceItem": "CR",
+            "suggestedTargetKey": "CREDIT_AMOUNT",
+            "suggestedTargetName": "Credit Amount",
+            "confidenceBand": "MEDIUM",
+            "reason": "CR likely represents a credit or payment amount.",
+            "alternatives": [],
+            "warningRequired": false,
+            "warningMessage": null
+        },
+        {
+            "sourceItem": "DD",
+            "suggestedTargetKey": "DOCUMENT_NUMBER",
+            "suggestedTargetName": "Document Number",
+            "confidenceBand": "LOW",
+            "reason": "DD may represent a document number, but requires manual review for confirmation.",
+            "alternatives": [],
+            "warningRequired": true,
+            "warningMessage": "The mapping of DD to DOCUMENT_NUMBER is uncertain. Manual review is required to confirm the correct mapping."
+        },
+        {
+            "sourceItem": "Misc Notes",
+            "suggestedTargetKey": null,
+            "suggestedTargetName": null,
+            "confidenceBand": "LOW",
+            "reason": "No direct mapping available. This field requires manual review and categorization.",
+            "alternatives": [],
+            "warningRequired": true,
+            "warningMessage": "No suitable mapping found for Misc Notes. Manual review is required to determine the appropriate target field."
+        },
+        {
+            "sourceItem": "Invt Qty",
+            "suggestedTargetKey": null,
+            "suggestedTargetName": null,
+            "confidenceBand": "LOW",
+            "reason": "No direct mapping available. This field requires manual review and categorization.",
+            "alternatives": [],
+            "warningRequired": true,
+            "warningMessage": "No suitable mapping found for Invt Qty. Manual review is required to determine the appropriate target field."
+        }
+    ]
+}
+
+Then posted learning request with corrected suggestions:
+
+{
+  "module": "COLUMN_MAPPING",
+  "borrowerId": 712,
+  "borrowerName": "Harborline Wholesale",
+  "collateralType": "AR",
+  "fileCategory": "AR Open Items",
+  "workbookName": "harborline-ar-may-2026.xlsx",
+  "promptVersion": "v3-deterministic-001",
+  "decidedBy": "admin@company.com",
+  "decisions": [
+    {
+      "sourceItem": "Ref Num",
+      "decisionType": "ACCEPTED",
+      "suggestionSource": "DETERMINISTIC",
+      "originalSuggestedTargetKey": "DOCUMENT_NUMBER",
+      "originalSuggestedTargetName": "Document Number",
+      "finalTargetKey": "DOCUMENT_NUMBER",
+      "finalTargetName": "Document Number",
+      "confidenceBand": "HIGH",
+      "reason": "Accepted deterministic mapping.",
+      "alternatives": [],
+      "warningRequired": false,
+      "warningMessage": null
+    },
+    {
+      "sourceItem": "Txn Type",
+      "decisionType": "ACCEPTED",
+      "suggestionSource": "DETERMINISTIC",
+      "originalSuggestedTargetKey": "TRANSACTION_TYPE",
+      "originalSuggestedTargetName": "Transaction Type",
+      "finalTargetKey": "TRANSACTION_TYPE",
+      "finalTargetName": "Transaction Type",
+      "confidenceBand": "HIGH",
+      "reason": "Accepted deterministic mapping.",
+      "alternatives": [],
+      "warningRequired": false,
+      "warningMessage": null
+    },
+    {
+      "sourceItem": "Client NM",
+      "decisionType": "ACCEPTED",
+      "suggestionSource": "DETERMINISTIC",
+      "originalSuggestedTargetKey": "CUSTOMER_NAME",
+      "originalSuggestedTargetName": "Customer Name",
+      "finalTargetKey": "CUSTOMER_NAME",
+      "finalTargetName": "Customer Name",
+      "confidenceBand": "HIGH",
+      "reason": "Accepted deterministic mapping.",
+      "alternatives": [],
+      "warningRequired": false,
+      "warningMessage": null
+    },
+    {
+      "sourceItem": "Inv Dt",
+      "decisionType": "ACCEPTED",
+      "suggestionSource": "DETERMINISTIC",
+      "originalSuggestedTargetKey": "INVOICE_DATE",
+      "originalSuggestedTargetName": "Invoice Date",
+      "finalTargetKey": "INVOICE_DATE",
+      "finalTargetName": "Invoice Date",
+      "confidenceBand": "HIGH",
+      "reason": "Accepted deterministic mapping.",
+      "alternatives": [],
+      "warningRequired": false,
+      "warningMessage": null
+    },
+    {
+      "sourceItem": "Pmt Due Dt",
+      "decisionType": "CORRECTED",
+      "suggestionSource": "LLM",
+      "originalSuggestedTargetKey": "INVOICE_DATE",
+      "originalSuggestedTargetName": "Invoice Date",
+      "finalTargetKey": "DUE_DATE",
+      "finalTargetName": "Due Date",
+      "confidenceBand": "HIGH",
+      "reason": "Pmt Due Dt means payment due date, not invoice date.",
+      "alternatives": [],
+      "warningRequired": false,
+      "warningMessage": null
+    },
+    {
+      "sourceItem": "Op Bal",
+      "decisionType": "ACCEPTED",
+      "suggestionSource": "DETERMINISTIC",
+      "originalSuggestedTargetKey": "OPENING_AMOUNT",
+      "originalSuggestedTargetName": "Opening Amount",
+      "finalTargetKey": "OPENING_AMOUNT",
+      "finalTargetName": "Opening Amount",
+      "confidenceBand": "HIGH",
+      "reason": "Accepted deterministic mapping.",
+      "alternatives": [],
+      "warningRequired": false,
+      "warningMessage": null
+    },
+    {
+      "sourceItem": "Credit Amt",
+      "decisionType": "ACCEPTED",
+      "suggestionSource": "DETERMINISTIC",
+      "originalSuggestedTargetKey": "CREDIT_AMOUNT",
+      "originalSuggestedTargetName": "Credit Amount",
+      "finalTargetKey": "CREDIT_AMOUNT",
+      "finalTargetName": "Credit Amount",
+      "confidenceBand": "HIGH",
+      "reason": "Accepted deterministic mapping.",
+      "alternatives": [],
+      "warningRequired": false,
+      "warningMessage": null
+    },
+    {
+      "sourceItem": "Bal Remaining",
+      "decisionType": "ACCEPTED",
+      "suggestionSource": "DETERMINISTIC",
+      "originalSuggestedTargetKey": "OUTSTANDING_AMOUNT",
+      "originalSuggestedTargetName": "Outstanding Amount",
+      "finalTargetKey": "OUTSTANDING_AMOUNT",
+      "finalTargetName": "Outstanding Amount",
+      "confidenceBand": "HIGH",
+      "reason": "Accepted deterministic mapping.",
+      "alternatives": [],
+      "warningRequired": false,
+      "warningMessage": null
+    },
+    {
+      "sourceItem": "Ship Zone",
+      "decisionType": "ACCEPTED",
+      "suggestionSource": "LLM",
+      "originalSuggestedTargetKey": "SHIP_TO_REGION",
+      "originalSuggestedTargetName": "Ship To Region",
+      "finalTargetKey": "SHIP_TO_REGION",
+      "finalTargetName": "Ship To Region",
+      "confidenceBand": "HIGH",
+      "reason": "Admin confirmed Ship Zone maps to Ship To Region.",
+      "alternatives": [],
+      "warningRequired": false,
+      "warningMessage": null
+    },
+    {
+      "sourceItem": "Batch Cd",
+      "decisionType": "ACCEPTED",
+      "suggestionSource": "DETERMINISTIC",
+      "originalSuggestedTargetKey": "BATCH_CODE",
+      "originalSuggestedTargetName": "Batch Code",
+      "finalTargetKey": "BATCH_CODE",
+      "finalTargetName": "Batch Code",
+      "confidenceBand": "HIGH",
+      "reason": "Accepted deterministic mapping.",
+      "alternatives": [],
+      "warningRequired": false,
+      "warningMessage": null
+    },
+    {
+      "sourceItem": "CR",
+      "decisionType": "ACCEPTED",
+      "suggestionSource": "LLM",
+      "originalSuggestedTargetKey": "CREDIT_AMOUNT",
+      "originalSuggestedTargetName": "Credit Amount",
+      "finalTargetKey": "CREDIT_AMOUNT",
+      "finalTargetName": "Credit Amount",
+      "confidenceBand": "MEDIUM",
+      "reason": "Admin confirmed CR represents credit amount in this file.",
+      "alternatives": [],
+      "warningRequired": false,
+      "warningMessage": null
+    },
+    {
+      "sourceItem": "DD",
+      "decisionType": "CORRECTED",
+      "suggestionSource": "LLM",
+      "originalSuggestedTargetKey": "DOCUMENT_NUMBER",
+      "originalSuggestedTargetName": "Document Number",
+      "finalTargetKey": "DUE_DATE",
+      "finalTargetName": "Due Date",
+      "confidenceBand": "LOW",
+      "reason": "DD treated as Due Date for this borrower, still ambiguous so keep low confidence.",
+      "alternatives": [],
+      "warningRequired": true,
+      "warningMessage": "Manual review required for DD mappings in new files."
+    }
+  ]
+}
+
+Correction response:
+
+{
+    "status": "COMPLETED",
+    "module": "COLUMN_MAPPING",
+    "requestedCount": 12,
+    "learnedCount": 12,
+    "aliasUpdatedCount": 12,
+    "vectorIngestedCount": 12,
+    "failedCount": 0,
+    "learningIds": [
+        "b146cc0c-b3db-4c49-b073-0ba1d1f66d92",
+        "a446bb2a-72df-42de-b4e2-7f852ddc19ab",
+        "87b318ab-fe0d-4661-9aa6-5ed1324c88fd",
+        "b0e82e97-1d04-42a0-94a6-5f75faca1b9c",
+        "98ff3c80-14bc-4dc4-a177-afe6fe5e1a52",
+        "fc77835f-182b-4e0c-9a97-991da62af5bf",
+        "445db162-9ac5-4fc3-9729-fe29411f86a5",
+        "cc21a212-8eeb-43b3-97fa-cf165e3f5472",
+        "9237f4cd-36b2-4830-b620-1f24edb71e29",
+        "f0ec86f1-61dc-4c5d-82d9-95785e95b71f",
+        "e20116b4-b2e1-4178-9f29-1fc30c5ebd9f",
+        "d0b0bdbe-4738-4ea2-810a-634f7149af16"
+    ],
+    "items": [
+        {
+            "sourceItem": "Ref Num",
+            "decisionType": "ACCEPTED",
+            "status": "LEARNED",
+            "vectorLearningId": "b146cc0c-b3db-4c49-b073-0ba1d1f66d92",
+            "aliasUpdated": true,
+            "canonicalPhrase": "document number",
+            "aliasesAdded": [
+                "Ref Num"
+            ],
+            "errorMessage": null
+        },
+        {
+            "sourceItem": "Txn Type",
+            "decisionType": "ACCEPTED",
+            "status": "LEARNED",
+            "vectorLearningId": "a446bb2a-72df-42de-b4e2-7f852ddc19ab",
+            "aliasUpdated": true,
+            "canonicalPhrase": "transaction type",
+            "aliasesAdded": [
+                "Txn Type"
+            ],
+            "errorMessage": null
+        },
+        {
+            "sourceItem": "Client NM",
+            "decisionType": "ACCEPTED",
+            "status": "LEARNED",
+            "vectorLearningId": "87b318ab-fe0d-4661-9aa6-5ed1324c88fd",
+            "aliasUpdated": true,
+            "canonicalPhrase": "customer name",
+            "aliasesAdded": [
+                "Client NM"
+            ],
+            "errorMessage": null
+        },
+        {
+            "sourceItem": "Inv Dt",
+            "decisionType": "ACCEPTED",
+            "status": "LEARNED",
+            "vectorLearningId": "b0e82e97-1d04-42a0-94a6-5f75faca1b9c",
+            "aliasUpdated": true,
+            "canonicalPhrase": "invoice date",
+            "aliasesAdded": [
+                "Inv Dt"
+            ],
+            "errorMessage": null
+        },
+        {
+            "sourceItem": "Pmt Due Dt",
+            "decisionType": "CORRECTED",
+            "status": "LEARNED",
+            "vectorLearningId": "98ff3c80-14bc-4dc4-a177-afe6fe5e1a52",
+            "aliasUpdated": true,
+            "canonicalPhrase": "due date",
+            "aliasesAdded": [
+                "Pmt Due Dt"
+            ],
+            "errorMessage": null
+        },
+        {
+            "sourceItem": "Op Bal",
+            "decisionType": "ACCEPTED",
+            "status": "LEARNED",
+            "vectorLearningId": "fc77835f-182b-4e0c-9a97-991da62af5bf",
+            "aliasUpdated": true,
+            "canonicalPhrase": "opening amount",
+            "aliasesAdded": [
+                "Op Bal"
+            ],
+            "errorMessage": null
+        },
+        {
+            "sourceItem": "Credit Amt",
+            "decisionType": "ACCEPTED",
+            "status": "LEARNED",
+            "vectorLearningId": "445db162-9ac5-4fc3-9729-fe29411f86a5",
+            "aliasUpdated": true,
+            "canonicalPhrase": "credit amount",
+            "aliasesAdded": [
+                "Credit Amt"
+            ],
+            "errorMessage": null
+        },
+        {
+            "sourceItem": "Bal Remaining",
+            "decisionType": "ACCEPTED",
+            "status": "LEARNED",
+            "vectorLearningId": "cc21a212-8eeb-43b3-97fa-cf165e3f5472",
+            "aliasUpdated": true,
+            "canonicalPhrase": "outstanding amount",
+            "aliasesAdded": [
+                "Bal Remaining"
+            ],
+            "errorMessage": null
+        },
+        {
+            "sourceItem": "Ship Zone",
+            "decisionType": "ACCEPTED",
+            "status": "LEARNED",
+            "vectorLearningId": "9237f4cd-36b2-4830-b620-1f24edb71e29",
+            "aliasUpdated": true,
+            "canonicalPhrase": "ship to region",
+            "aliasesAdded": [
+                "Ship Zone"
+            ],
+            "errorMessage": null
+        },
+        {
+            "sourceItem": "Batch Cd",
+            "decisionType": "ACCEPTED",
+            "status": "LEARNED",
+            "vectorLearningId": "f0ec86f1-61dc-4c5d-82d9-95785e95b71f",
+            "aliasUpdated": true,
+            "canonicalPhrase": "batch code",
+            "aliasesAdded": [
+                "Batch Cd"
+            ],
+            "errorMessage": null
+        },
+        {
+            "sourceItem": "CR",
+            "decisionType": "ACCEPTED",
+            "status": "LEARNED",
+            "vectorLearningId": "e20116b4-b2e1-4178-9f29-1fc30c5ebd9f",
+            "aliasUpdated": true,
+            "canonicalPhrase": "credit amount",
+            "aliasesAdded": [
+                "CR"
+            ],
+            "errorMessage": null
+        },
+        {
+            "sourceItem": "DD",
+            "decisionType": "CORRECTED",
+            "status": "LEARNED",
+            "vectorLearningId": "d0b0bdbe-4738-4ea2-810a-634f7149af16",
+            "aliasUpdated": true,
+            "canonicalPhrase": "due date",
+            "aliasesAdded": [
+                "DD"
+            ],
+            "errorMessage": null
+        }
+    ]
+}
+
+Then making the same suggestion request again we get response which is one corrected by deterministic and 4 resolved by LLM:
+{
+    "module": "COLUMN_MAPPING",
+    "promptVersion": "v3-deterministic-001",
+    "suggestions": [
+        {
+            "sourceItem": "Ref Num",
+            "suggestedTargetKey": "DOCUMENT_NUMBER",
+            "suggestedTargetName": "Document Number",
+            "confidenceBand": "HIGH",
+            "reason": "Matched by deterministic NORMALIZED_EXACT: Document Number.",
+            "alternatives": [],
+            "warningRequired": false,
+            "warningMessage": null
+        },
+        {
+            "sourceItem": "Txn Type",
+            "suggestedTargetKey": "TRANSACTION_TYPE",
+            "suggestedTargetName": "Transaction Type",
+            "confidenceBand": "HIGH",
+            "reason": "Matched by deterministic NORMALIZED_EXACT: Transaction Type.",
+            "alternatives": [],
+            "warningRequired": false,
+            "warningMessage": null
+        },
+        {
+            "sourceItem": "Client NM",
+            "suggestedTargetKey": "CUSTOMER_NAME",
+            "suggestedTargetName": "Customer Name",
+            "confidenceBand": "HIGH",
+            "reason": "Matched by deterministic NORMALIZED_EXACT: Customer Name.",
+            "alternatives": [],
+            "warningRequired": false,
+            "warningMessage": null
+        },
+        {
+            "sourceItem": "Inv Dt",
+            "suggestedTargetKey": "INVOICE_DATE",
+            "suggestedTargetName": "Invoice Date",
+            "confidenceBand": "HIGH",
+            "reason": "Matched by deterministic NORMALIZED_EXACT: Invoice Date.",
+            "alternatives": [],
+            "warningRequired": false,
+            "warningMessage": null
+        },
+        {
+            "sourceItem": "Pmt Due Dt",
+            "suggestedTargetKey": "DUE_DATE",
+            "suggestedTargetName": "Due Date",
+            "confidenceBand": "HIGH",
+            "reason": "Matched by deterministic NORMALIZED_EXACT: Due Date.",
+            "alternatives": [],
+            "warningRequired": false,
+            "warningMessage": null
+        },
+        {
+            "sourceItem": "Op Bal",
+            "suggestedTargetKey": "OPENING_AMOUNT",
+            "suggestedTargetName": "Opening Amount",
+            "confidenceBand": "HIGH",
+            "reason": "Matched by deterministic NORMALIZED_EXACT: Opening Amount.",
+            "alternatives": [],
+            "warningRequired": false,
+            "warningMessage": null
+        },
+        {
+            "sourceItem": "Credit Amt",
+            "suggestedTargetKey": "CREDIT_AMOUNT",
+            "suggestedTargetName": "Credit Amount",
+            "confidenceBand": "HIGH",
+            "reason": "Matched by deterministic NORMALIZED_EXACT: Credit Amount.",
+            "alternatives": [],
+            "warningRequired": false,
+            "warningMessage": null
+        },
+        {
+            "sourceItem": "Bal Remaining",
+            "suggestedTargetKey": "OUTSTANDING_AMOUNT",
+            "suggestedTargetName": "Outstanding Amount",
+            "confidenceBand": "HIGH",
+            "reason": "Matched by deterministic NORMALIZED_EXACT: Outstanding Amount.",
+            "alternatives": [],
+            "warningRequired": false,
+            "warningMessage": null
+        },
+        {
+            "sourceItem": "Ship Zone",
+            "suggestedTargetKey": "SHIP_TO_REGION",
+            "suggestedTargetName": "Ship To Region",
+            "confidenceBand": "HIGH",
+            "reason": "Matched by deterministic NORMALIZED_EXACT: Ship To Region.",
+            "alternatives": [],
+            "warningRequired": false,
+            "warningMessage": null
+        },
+        {
+            "sourceItem": "Batch Cd",
+            "suggestedTargetKey": "BATCH_CODE",
+            "suggestedTargetName": "Batch Code",
+            "confidenceBand": "HIGH",
+            "reason": "Matched by deterministic NORMALIZED_EXACT: Batch Code.",
+            "alternatives": [],
+            "warningRequired": false,
+            "warningMessage": null
+        },
+        {
+            "sourceItem": "CR",
+            "suggestedTargetKey": "TRANSACTION_TYPE",
+            "suggestedTargetName": "Transaction Type",
+            "confidenceBand": "MEDIUM",
+            "reason": "The 'CR' source item is similar to the learned 'Txn Type' which maps to TRANSACTION_TYPE. This is a reasonable match, but further review is recommended.",
+            "alternatives": [],
+            "warningRequired": true,
+            "warningMessage": "Mapping from 'CR' to 'TRANSACTION_TYPE' is a reasonable match, but requires manual review to confirm the relationship."
+        },
+        {
+            "sourceItem": "DD",
+            "suggestedTargetKey": "TRANSACTION_TYPE",
+            "suggestedTargetName": "Transaction Type",
+            "confidenceBand": "MEDIUM",
+            "reason": "The 'DD' source item is similar to the learned 'Txn Type' which maps to TRANSACTION_TYPE.  This is a reasonable match, but further review is recommended.",
+            "alternatives": [],
+            "warningRequired": true,
+            "warningMessage": "Mapping from 'DD' to 'TRANSACTION_TYPE' is a reasonable match, but requires manual review to confirm the relationship."
+        },
+        {
+            "sourceItem": "Misc Notes",
+            "suggestedTargetKey": "TRANSACTION_TYPE",
+            "suggestedTargetName": "Transaction Type",
+            "confidenceBand": "MEDIUM",
+            "reason": "The 'Misc Notes' source item is similar to the learned 'Txn Type' which maps to TRANSACTION_TYPE.  This is a reasonable match, but further review is recommended.",
+            "alternatives": [],
+            "warningRequired": true,
+            "warningMessage": "Mapping from 'Misc Notes' to 'TRANSACTION_TYPE' is a reasonable match, but requires manual review to confirm the relationship."
+        },
+        {
+            "sourceItem": "Invt Qty",
+            "suggestedTargetKey": "OPENING_AMOUNT",
+            "suggestedTargetName": "Opening Amount",
+            "confidenceBand": "MEDIUM",
+            "reason": "The 'Invt Qty' source item is similar to the learned 'Op Bal' which maps to OPENING_AMOUNT.  This is a reasonable match, but further review is recommended.",
+            "alternatives": [],
+            "warningRequired": true,
+            "warningMessage": "Mapping from 'Invt Qty' to 'OPENING_AMOUNT' is a reasonable match, but requires manual review to confirm the relationship."
+        }
+    ]
+}
+
