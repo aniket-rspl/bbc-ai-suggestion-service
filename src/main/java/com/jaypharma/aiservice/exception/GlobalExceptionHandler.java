@@ -30,6 +30,15 @@ public class GlobalExceptionHandler {
         );
     }
 
+    @ExceptionHandler(IllegalArgumentException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public Map<String, Object> handleIllegalArgument(IllegalArgumentException ex) {
+        return Map.of(
+                "error", "VALIDATION_FAILED",
+                "message", ex.getMessage()
+        );
+    }
+
     @ExceptionHandler(IllegalStateException.class)
     @ResponseStatus(HttpStatus.BAD_GATEWAY)
     public Map<String, Object> handleIllegalState(IllegalStateException ex) {

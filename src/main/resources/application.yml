@@ -1,8 +1,11 @@
 spring:
   application:
     name: bbc-ai-suggestion-service
-    profiles:
-      active: local
+  profiles:
+    active: local
+  config:
+    import:
+      - optional:classpath:ai-normalization.yml
 
   ai:
     ollama:
@@ -24,4 +27,4 @@ server:
 
 bbc:
   ai:
-    prompt-version: v2-rag-001
+    prompt-version: v3-deterministic-001

@@ -2,7 +2,7 @@ package com.jaypharma.aiservice.controller;
 
 import com.jaypharma.aiservice.dto.suggestion.AiSuggestionRequest;
 import com.jaypharma.aiservice.dto.suggestion.AiSuggestionResponse;
-import com.jaypharma.aiservice.service.llm.DirectLlmSuggestionService;
+import com.jaypharma.aiservice.service.orchestration.AiSuggestionOrchestrator;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class AiSuggestionController {
 
-    private final DirectLlmSuggestionService suggestionService;
+    private final AiSuggestionOrchestrator suggestionService;
 
     @PostMapping
     public AiSuggestionResponse suggest(@Valid @RequestBody AiSuggestionRequest request) {

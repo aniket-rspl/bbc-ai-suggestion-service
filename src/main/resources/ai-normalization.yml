@@ -1,0 +1,326 @@
+bbc:
+  ai:
+    normalization:
+      keyword-groups:
+        - canonical: document number
+          aliases:
+            - doc no
+            - doc no.
+            - doc #
+            - "#"
+            - document no
+            - document no.
+            - document "#"
+            - document #
+            - reference no
+            - ref no
+            - ref num
+
+        - canonical: transaction type
+          aliases:
+            - txn type
+            - trx type
+            - trans type
+            - transaction type
+            - trans. tp
+
+        - canonical: customer name
+          aliases:
+            - cust name
+            - cust nm
+            - customer name
+            - customer nm
+            - client
+            - client name
+            - debtor name
+            - buyer name
+
+        - canonical: invoice date
+          aliases:
+            - invoice date
+            - invoice dt
+            - inv date
+            - inv dt
+            - invoice created
+            - invoice created date
+            - bill date
+            - bill dt
+
+        - canonical: invoice creation date
+          aliases:
+            - invoice creation date
+            - invoice creation dt
+
+        - canonical: due date
+          aliases:
+            - due date
+            - due dt
+            - payment due
+            - pmt due
+            - maturity date
+
+        - canonical: beginning balance
+          aliases:
+            - beginning balance
+            - beg balance
+
+        - canonical: opening amount
+          aliases:
+            - opening amount
+            - open balance
+            - op balance
+            - op bal
+            - opening balance
+            - beg bal
+
+        - canonical: credit amount
+          aliases:
+            - credit amount
+            - credit amt
+            - credits
+
+        - canonical: outstanding amount
+          aliases:
+            - outstanding amount
+            - outstanding amt
+            - remaining amount
+            - remaining amt
+            - remaining balance
+            - balance remaining
+            - unpaid amount
+            - receivable amount
+            - receivable amt
+            - open amount
+            - open amt
+
+        - canonical: invoice
+          aliases:
+            - inv
+            - invoice
+
+        - canonical: date
+          aliases:
+            - dt
+            - date
+
+        - canonical: document
+          aliases:
+            - doc
+            - document
+
+        - canonical: number
+          aliases:
+            - num
+            - no
+            - no.
+            - nbr
+            - number
+            - "#"
+
+        - canonical: reference
+          aliases:
+            - ref
+            - reference
+
+        - canonical: transaction
+          aliases:
+            - txn
+            - trx
+            - trans
+            - transaction
+
+        - canonical: type
+          aliases:
+            - tp
+            - typ
+            - type
+
+        - canonical: code
+          aliases:
+            - cd
+            - code
+
+        - canonical: customer
+          aliases:
+            - cust
+            - customer
+
+        - canonical: name
+          aliases:
+            - nm
+            - name
+
+        - canonical: amount
+          aliases:
+            - amt
+            - amount
+
+        - canonical: balance
+          aliases:
+            - bal
+            - balance
+
+        - canonical: beginning
+          aliases:
+            - beg
+            - begin
+            - beginning
+
+        - canonical: opening
+          aliases:
+            - op
+            - open
+            - opening
+
+        - canonical: payment
+          aliases:
+            - pmt
+            - pmnt
+            - payment
+
+        - canonical: due
+          aliases:
+            - due
+
+        - canonical: quantity
+          aliases:
+            - qty
+            - qnty
+            - quantity
+
+        - canonical: description
+          aliases:
+            - desc
+            - descr
+            - description
+
+        - canonical: accounts receivable
+          aliases:
+            - ar
+            - accounts receivable
+
+        - canonical: borrowing base certificate
+          aliases:
+            - bbc
+            - borrowing base certificate
+
+        - canonical: inventory
+          aliases:
+            - invt
+            - inventory
+
+        - canonical: remark
+          aliases:
+            - remarks
+            - remark
+            - notes
+            - note
+
+        - canonical: ar ledger
+          aliases:
+            - ar dec
+            - ar december
+            - ar aging
+
+        - canonical: inventory report
+          aliases:
+            - stock summary
+
+        - canonical: bbc report
+          aliases:
+            - bbc summary
+            - borrowing base cert
+
+        - canonical: bank statement
+          aliases:
+            - bank recon
+            - bank reconciliation
+
+      ambiguous-keyword-groups:
+        - canonical: credit
+          aliases:
+            - cr
+          ambiguity-reason: "CR can mean credit, credit memo, credit amount, or another business-specific code."
+
+        - canonical: due date
+          aliases:
+            - dd
+          ambiguity-reason: "DD may mean due date, document date, demand draft, or another borrower-specific term."
+
+        - canonical: inventory
+          aliases:
+            - invt
+          ambiguity-reason: "Invt usually means inventory, but should not be assumed unless inventory context or target exists."
+
+        - canonical: stock
+          aliases:
+            - stk
+            - stock
+          ambiguity-reason: "Stock can mean inventory stock, financial stock, or another context-specific value."
+
+      cleaned-phase-tokens:
+        - "#"
+        - num
+        - no
+        - no.
+        - amt
+        - bal
+        - dt
+        - nm
+        - tp
+        - typ
+        - pmt
+        - ref
+
+      noise-tokens:
+        - field
+        - column
+        - details
+        - info
+
+      vague-source-patterns:
+        - remarks
+        - remark
+        - notes
+        - note
+        - misc
+        - summary
+        - temp
+        - temporary
+
+      field-type-hints:
+        date:
+          - date
+          - dt
+          - due
+          - invoice date
+          - due date
+          - maturity
+        currency:
+          - amount
+          - amt
+          - balance
+          - bal
+          - credit
+          - outstanding
+          - receivable
+          - payment
+        numeric:
+          - num
+          - qty
+          - quantity
+
+      thresholds:
+        high: 0.90
+        medium: 0.75
+        ambiguity-gap: 0.08
+        exact-match-score: 1.0
+        normalized-exact-score: 0.95
+        synonym-score: 0.92
+
+      messages:
+        deterministic-high-reason: "Matched by deterministic {strategy}: {detail}."
+        deterministic-medium-reason: "Possible deterministic match ({strategy}): {detail}. Review recommended."
+        manual-review-warning: "Please review this mapping manually."
+        no-suggestion-reason: "No suggestion returned for this item."
+        ambiguous-source-reason: "Source label is ambiguous and requires manual review."
