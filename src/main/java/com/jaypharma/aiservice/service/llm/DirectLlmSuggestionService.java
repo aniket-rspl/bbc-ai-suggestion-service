@@ -4,7 +4,6 @@ import com.jaypharma.aiservice.dto.suggestion.AiSuggestionRequest;
 import com.jaypharma.aiservice.dto.suggestion.AiSuggestionResponse;
 import com.jaypharma.aiservice.utility.RagContextBuilder;
 import com.jaypharma.aiservice.utility.SuggestionPromptBuilder;
-import com.jaypharma.aiservice.utility.SuggestionResponseSanitizer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
@@ -18,10 +17,9 @@ public class DirectLlmSuggestionService {
     private final ChatClient.Builder chatClientBuilder;
     private final ObjectMapper objectMapper;
     private final SuggestionPromptBuilder promptBuilder;
-    private final SuggestionResponseSanitizer sanitizer;
     private final RagContextBuilder ragContextBuilder;
 
-    public AiSuggestionResponse suggest(AiSuggestionRequest request) {
+    public AiSuggestionResponse suggestInternal(AiSuggestionRequest request) {
         ChatClient chatClient = chatClientBuilder.build();
 
         String ragContext = ragContextBuilder.build(request);
@@ -68,8 +66,7 @@ public class DirectLlmSuggestionService {
                 rawResponse
         );
 
-        AiSuggestionResponse response = parseResponse(rawResponse);
-        return sanitizer.sanitize(request, response);
+        return parseResponse(rawResponse);
     }
 
     private AiSuggestionResponse parseResponse(String rawResponse) {
