@@ -1,90 +1,111 @@
-# 🧠 BBC AI Suggestion Service — V2 RAG Prototype
+## 🧠 BBC AI Suggestion Service - V3 Deterministic + RAG + LLM (Prototype)
 
-**BBC Verification Platform — Phase 2: AI Assistant & Suggestion Engine**
+**BBC Verification Platform - Phase 2: AI Assistant and Suggestion Engine**
 
-This repository contains the **V2 Prototype** of the AI Suggestion Service for the Jay Pharma Collective BBC (Borrowing Base Certificate) Verification Platform.
+This repository contains the **V3 prototype** of the AI Suggestion Service for the Jay Pharma Collective BBC (Borrowing Base Certificate) Verification Platform.
 
-This microservice acts as a **human-in-the-loop AI assistant**. It helps platform administrators configure borrower data by analyzing structural metadata such as uploaded file column headers, Excel workbook sheet names, canonical field definitions, and **admin-approved historical mappings**.
+This microservice acts as a **human-in-the-loop suggestion engine**. It helps platform administrators configure borrower metadata by analyzing uploaded file column headers, Excel workbook sheet names, canonical target fields/categories, and **admin decisions + historical approved mappings**.
 
-The AI service suggests the most appropriate target mappings, but it does **not** make final decisions. All mappings must be reviewed, accepted, corrected, or rejected by an administrator.
+The AI service suggests the most appropriate target mappings, but it does **not** make final decisions. Admin decisions are always final.
 
 ---
 
 ## ⚠️ Critical Security Notice
 
-This AI service operates strictly on **metadata**.
+This AI service operates strictly on **structural metadata**.
 
-The service must not process or transmit borrower transactional financial data to the LLM, including but not limited to:
+The service must not process or transmit borrower transactional financial data to the LLM, including:
 
-* Invoice amounts
-* Customer names from transaction rows
-* Balances
-* Payments
-* Transaction-level financial records
+- Invoice amounts
+- Customer names from transaction rows
+- Balances
+- Payments
+- Transaction-level financial records
 
-Only structural metadata is used, such as header names, sheet names, canonical field names/descriptions, file category names, and historical admin-approved mappings. The AI is purely a **suggestion engine**. The administrator’s decision is always final.
+Only metadata is used (headers, sheet names, canonical field names/descriptions, file category names, and historical admin-approved mappings).
 
 ---
 
-## 🏗️ Architecture & Tech Stack
-
-V2 extends the V1 direct LLM prototype by adding **Retrieval-Augmented Generation (RAG)** using historical admin-approved mappings.
+## 🏗️ Architecture and Tech Stack
 
 ### Core Stack
 
-* Java 17
-* Spring Boot 4.x
-* Spring AI
-* Maven Wrapper
+- Java 17
+- Spring Boot 4.x
+- Spring AI
+- Maven Wrapper
 
-### Local AI & Vector Components
+### Local AI and Vector Components
 
-* **Local LLM Execution:** Ollama
-* **Vector Generation:** Ollama Embeddings
-* **Vector Database:** Spring AI `VectorStore` (`SimpleVectorStore` for local prototype/demo storage)
+- **Local LLM Execution:** Ollama
+- **Vector Generation:** Ollama embeddings
+- **Vector Store (prototype):** Spring AI `VectorStore` using `SimpleVectorStore` (in-memory)
 
-### Recommended Local Models
+### Normalization and Deterministic Matching (V3)
 
-* **Chat Model:** `llama3.2:latest` (Alternatives: `gemma3:12b`, `phi4:latest`)
-* **Embedding Model:** `mxbai-embed-large:latest` (Alternative: `bge-m3:latest`)
+V3 adds **deterministic preprocessing and matching** before using any tokens:
+
+- **Normalization config (seed):** `src/main/resources/ai-normalization.yml`
+- **Runtime alias overlay:** in-memory `NormalizationKnowledgeStore` updates based on admin decisions
 
 ---
 
-## 🧭 V2 High-Level Flow
+## 🧪 Prototype Notice (In-Memory Stores)
+
+This is a **prototype**.
+
+- **Normalization aliases** are seeded from `src/main/resources/ai-normalization.yml` and updated at runtime in an **in-memory overlay** (`NormalizationKnowledgeStore`).
+- **Vector store** uses Spring AI `SimpleVectorStore` (in-memory).
+
+If the app restarts, both the in-memory alias overlay and the vector store contents are lost.
+
+### Production expectation
+
+For production environments you should:
+
+- Replace the in-memory normalization store with a **DB backed store** (so learned aliases persist).
+- Replace `SimpleVectorStore` with a **persistent vector store** (Azure AI Search or another production-grade vector DB).
+- Add audit tables for learning decisions if required by compliance.
+
+---
+
+## 🧭 V3 High-Level Flow
 
 ### 1. Suggestion Flow
 
-1. Admin uploads file metadata.
-2. System extracts headers / sheet names.
-3. Suggestion API receives `sourceItems` + `targetItems`.
-4. **Per-source-item vector retrieval** fetches compact approved historical mapping hints.
-5. Single LLM call generates sanitized structured suggestions.
-6. Admin reviews, accepts, or corrects the mappings.
+1. Admin uploads a file (main app extracts headers or sheet names).
+2. Suggestion API receives `sourceItems` + allowed `targetItems`.
+3. **Preprocessing** normalizes each source item (aliases, abbreviations, ambiguity flags).
+4. **Deterministic matching** attempts HIGH-confidence matches using normalized text and configured aliases.
+5. Only unresolved/ambiguous items go to **RAG** (per-source-item retrieval).
+6. Only unresolved/ambiguous items go to **LLM** (single LLM call for the reduced list).
+7. Merge deterministic + LLM results, then sanitize and return one suggestion per source item.
+8. Admin reviews and accepts or corrects mappings.
 
-### 2. Learning Flow
+### 2. Unified Learning Flow (single API)
 
-1. Admin accepts or corrects suggestions.
+1. Admin completes review (accepted or corrected rows only).
 2. Frontend sends **one batch learning request**.
-3. Backend stores each approved/corrected mapping as a separate vector document in the `VectorStore`.
-4. Future RAG suggestions improve based on this learned context.
-
-> **Note:** The learning endpoint is intentionally batch-based. The UI should not call the backend once per suggestion row. Instead, after the admin completes the review, all accepted and corrected mappings are sent in one single request.
+3. Backend updates both, in one operation:
+   - **Alias store** (deterministic learning)
+   - **Vector store** (RAG learning)
+4. Future suggestions improve:
+   - more deterministic HIGH matches
+   - fewer RAG/LLM calls
 
 ---
 
-## ✅ What V2 Adds Over V1
+## ✅ What V3 Adds Over V2
 
-**V1 Flow:** `Request -> Direct LLM -> JSON Response -> Sanitizer`
+**V2 Flow:** Request -> per-source-item RAG -> LLM -> sanitizer -> admin review -> vector store learning
 
-**V2 Flow:** `Request -> Per-source-item RAG retrieval -> Compact historical mapping hints -> Direct LLM -> JSON Response -> Sanitizer -> Admin Review -> Batch Learning API -> Vector Store`
+**V3 Flow:** Request -> deterministic preprocessing/matching -> RAG (unresolved) -> LLM (unresolved) -> sanitizer -> admin review -> **unified learning (aliases + vector store)**
 
-**Key V2 Improvements:**
+Key V3 improvements:
 
-* Learns from admin-approved and admin-corrected mappings.
-* Performs per-source-item retrieval instead of one global retrieval to ensure no mappings are missed.
-* Stores each approved mapping as an individual vector document.
-* Uses compact RAG hints to avoid large prompts, keeping operations fast and cost-effective.
-* Maintains one LLM call per suggestion request and one learning API call per admin review batch.
+- Deterministic HIGH-confidence matches skip AI calls (token savings).
+- LLM is called only for unresolved items.
+- Learning is unified: one API updates both alias knowledge and vector knowledge.
 
 ---
 
@@ -92,52 +113,40 @@ V2 extends the V1 direct LLM prototype by adding **Retrieval-Augmented Generatio
 
 ### Prerequisites
 
-* Java 17 SDK installed.
-* Ollama running locally or accessible through the organization network.
-* Required Ollama chat and embedding models pulled (`ollama pull gemma3:4b` and `ollama pull mxbai-embed-large:latest`).
+- Java 17 SDK installed
+- Ollama running locally or accessible through your network
+- Required models pulled (example):
 
-### ⚙️ Local Configuration
-
-Update your `src/main/resources/application-local.yml` to include the vector store and embedding configurations:
-
-```yaml
-server:
-  port: 8085
-
-spring:
-  application:
-    name: bbc-ai-suggestion-service
-  ai:
-    ollama:
-      base-url: http://172.16.8.90:11434
-      chat:
-        options:
-          model: gemma3:4b
-          temperature: 0
-      embedding:
-        options:
-          model: mxbai-embed-large:latest
-    model:
-      embedding: ollama
-
+```bash
+ollama pull gemma3:4b
+ollama pull mxbai-embed-large:latest
 ```
-### ▶️ Run the Application
 
-The service will start on `http://localhost:8085`.
+### Configuration
+
+Main config lives in `src/main/resources/application.yml` and imports `ai-normalization.yml`:
+
+- Ollama base URL: `spring.ai.ollama.base-url`
+- Chat model: `spring.ai.ollama.chat.options.model`
+- Embedding model: `spring.ai.ollama.embedding.options.model`
+- Prompt version: `bbc.ai.prompt-version`
+- Normalization config: `src/main/resources/ai-normalization.yml`
+
+### Run the Application
+
+The service starts on `http://localhost:8085`.
 
 ---
 
-## 🔌 API Documentation
+## API Documentation
 
 ### 1. Generate AI Suggestions
 
 `POST /api/v1/ai/suggestions`
 
-Generates AI mapping suggestions based on source items, allowed target items, and historical RAG context.
+Generates mapping suggestions based on `sourceItems`, allowed `targetItems`, and historical RAG context.
 
-**Request Headers:** `Content-Type: application/json`
-
-**Request Body Schema (`AiSuggestionRequest`)**
+**Request Body (`AiSuggestionRequest`)**
 
 | Field | Type | Required | Description |
 | --- | --- | --- | --- |
@@ -146,215 +155,259 @@ Generates AI mapping suggestions based on source items, allowed target items, an
 | `borrowerName` | String | No | Borrower name context |
 | `collateralType` | String | No | Example: `AR`, `Inventory` |
 | `fileCategory` | String | No | Example: `AR Ledger`, `Bank Statement` |
-| `workbookName` | String | No | Uploaded workbook name |
-| `sourceItems` | Array of Strings | Yes | Headers or sheet names extracted from uploaded file |
-| `targetItems` | Array of Objects | Yes | Canonical fields/categories the AI is allowed to choose from |
+| `workbookName` | String | No | Workbook name |
+| `sourceItems` | Array[String] | Yes | Headers or sheet names |
+| `targetItems` | Array[Object] | Yes | Allowed canonical targets (keys) |
 
-### 2. Batch Learning API
+### 2. Unified Batch Learning API (aliases + vector store)
 
-`POST /api/v1/ai/learning/approved-mappings`
+`POST /api/v1/ai/learning/mapping-decisions`
 
-Stores admin-approved and admin-corrected mappings for future RAG retrieval. **Only send mappings that the admin has accepted or corrected.** Do not send rejected or null mappings (e.g., `Remarks -> null`).
+Stores admin **accepted/corrected** decisions and learns from them for both:
 
-**Request Body Schema (`AiLearningRequest`)**
+- deterministic alias matching
+- vector store RAG retrieval
+
+Compatibility notes:
+
+- `suggestions` is accepted as an alias for `decisions`
+- `acceptedTargetKey/acceptedTargetName` are accepted as aliases for `finalTargetKey/finalTargetName`
+- `approvedBy` is accepted as an alias for `decidedBy`
+
+**Request Body (`AiLearningRequest`)**
 
 | Field | Type | Required | Description |
 | --- | --- | --- | --- |
-| `module` | String (Enum) | Yes | Suggestion module (`COLUMN_MAPPING` or `SHEET_MAPPING`) |
+| `module` | String (Enum) | Yes | `COLUMN_MAPPING` or `SHEET_MAPPING` |
 | `borrowerId` | Long | No | Borrower identifier |
-| `promptVersion` | String | No | Prompt version returned by the suggestion API |
-| `approvedBy` | String | No | Admin/user who approved the mappings |
-| `suggestions` | Array of Objects | Yes | The accepted/corrected mappings |
+| `promptVersion` | String | No | Prompt version returned by suggestion API |
+| `decidedBy` | String | No | Admin/user who decided |
+| `decisions` | Array[Object] | Yes | Accepted/corrected rows only |
+
+Deprecated endpoint (kept for backward compatibility):
+
+- `POST /api/v1/ai/learning/approved-mappings` -> same behavior as `mapping-decisions`
 
 ---
 
+## 🧠 Strategy: Deterministic + RAG + LLM (Detailed)
 
-### 1. AI Suggestion Payload
+### 1) Deterministic matching
 
-**AI Suggestion Request: Column Mapping**
+Used first for every `sourceItem`.
+
+- **Input**: a source header or sheet name, plus the allowed `targetItems`
+- **Normalization**: token cleanup, alias expansion, ambiguity flags from `ai-normalization.yml`
+- **Strategies** (in order):
+  - exact match
+  - normalized exact match
+  - synonym match (from alias knowledge store)
+- **Outcome**:
+  - **HIGH** confidence results are returned immediately without calling RAG or LLM.
+  - ambiguous inputs stay unresolved (example: `CR`, `DD`, `Invt`).
+
+### 2) RAG (per-source-item retrieval)
+
+Used only for unresolved items.
+
+- For each unresolved `sourceItem`, the service queries the vector store for the top similar **approved mappings**.
+- The prompt uses **compact hints** instead of dumping full historical documents.
+
+### 3) LLM (only for unresolved items)
+
+Used only after deterministic matching (and with RAG hints when available).
+
+- The service makes **one** LLM call for the reduced list of unresolved items.
+- Output must be valid JSON and must choose only from allowed `targetItems`.
+- Final response is sanitized to prevent hallucinated keys and to guarantee one suggestion per source item.
+
+---
+
+## 🛡️ Guardrails and Error Handling
+
+To compensate for LLM variability, the service enforces strict contracts:
+
+- **JSON extraction**: fenced responses like ```json are stripped and parsed.
+- **1 to 1 mapping guarantee**: final response contains exactly one suggestion per `sourceItem`.
+- **Hallucination prevention**: if the LLM returns a target key not present in `targetItems`, the sanitizer drops the key, downgrades confidence to `LOW`, and flags manual review.
+- **Manual review flags**: low confidence or null target results are returned with warnings.
+
+---
+
+## Example Payloads
+
+### 1. Suggestion Request (Column Mapping)
 
 ```json
 {
   "module": "COLUMN_MAPPING",
-  "borrowerId": 101,
-  "borrowerName": "ABC Foods",
+  "borrowerId": 712,
+  "borrowerName": "Harborline Wholesale",
   "collateralType": "AR",
-  "fileCategory": "AR Ledger",
-  "workbookName": "abc-foods-ar-ledger.xlsx",
+  "fileCategory": "AR Open Items",
+  "workbookName": "harborline-ar-may-2026.xlsx",
   "sourceItems": [
-    "Trans. tp",
-    "Doc no.",
-    "DD",
-    "Op bal",
-    "credits"
+    "Ref Num",
+    "Inv Dt",
+    "Pmt Due Dt",
+    "Op Bal",
+    "Bal Remaining",
+    "CR",
+    "DD"
   ],
   "targetItems": [
-    {
-      "key": "TRANSACTION_TYPE",
-      "name": "Transaction Type",
-      "dataType": "TEXT",
-      "description": "Type of transaction. Examples: Invoice, General Journal, Payment, Credit Memo."
-    },
-    {
-      "key": "DOCUMENT_NUMBER",
-      "name": "Document Number",
-      "dataType": "TEXT",
-      "description": "Unique document identifier."
-    },
-    {
-      "key": "DUE_DATE",
-      "name": "Due Date",
-      "dataType": "DATE",
-      "description": "Date on which payment is due."
-    },
-    {
-      "key": "OPENING_AMOUNT",
-      "name": "Opening Amount",
-      "dataType": "DECIMAL",
-      "description": "Opening amount or opening balance."
-    },
-    {
-      "key": "CREDIT_AMOUNT",
-      "name": "Credit Amount",
-      "dataType": "DECIMAL",
-      "description": "Credit amount or credit memo amount."
-    }
+    { "key": "DOCUMENT_NUMBER", "name": "Document Number", "dataType": "TEXT", "description": "Unique reference number." },
+    { "key": "INVOICE_DATE", "name": "Invoice Date", "dataType": "DATE", "description": "Date the invoice was issued." },
+    { "key": "DUE_DATE", "name": "Due Date", "dataType": "DATE", "description": "Payment due date." },
+    { "key": "OPENING_AMOUNT", "name": "Opening Amount", "dataType": "DECIMAL", "description": "Opening balance." },
+    { "key": "OUTSTANDING_AMOUNT", "name": "Outstanding Amount", "dataType": "DECIMAL", "description": "Unpaid balance remaining." },
+    { "key": "CREDIT_AMOUNT", "name": "Credit Amount", "dataType": "DECIMAL", "description": "Credit or payment amount." }
   ]
 }
-
 ```
 
-**AI Suggestion Response: Column Mapping**
+### 1.1 Suggestion Response (Column Mapping, sample)
+
+This is an example shape. Your actual response depends on current aliases, RAG history, and LLM output.
 
 ```json
 {
   "module": "COLUMN_MAPPING",
-  "promptVersion": "v2-rag-001",
+  "promptVersion": "v3-deterministic-001",
   "suggestions": [
     {
-      "sourceItem": "Trans. tp",
-      "suggestedTargetKey": "TRANSACTION_TYPE",
-      "suggestedTargetName": "Transaction Type",
-      "confidenceBand": "HIGH",
-      "reason": "Trans. tp is a common abbreviation for transaction type.",
-      "alternatives": [],
-      "warningRequired": false,
-      "warningMessage": null
-    },
-    {
-      "sourceItem": "Doc no.",
+      "sourceItem": "Ref Num",
       "suggestedTargetKey": "DOCUMENT_NUMBER",
       "suggestedTargetName": "Document Number",
       "confidenceBand": "HIGH",
-      "reason": "Doc no. refers to document number.",
+      "reason": "Matched by deterministic NORMALIZED_EXACT: Document Number.",
       "alternatives": [],
       "warningRequired": false,
       "warningMessage": null
     },
     {
-      "sourceItem": "DD",
-      "suggestedTargetKey": "DUE_DATE",
-      "suggestedTargetName": "Due Date",
+      "sourceItem": "CR",
+      "suggestedTargetKey": "CREDIT_AMOUNT",
+      "suggestedTargetName": "Credit Amount",
       "confidenceBand": "MEDIUM",
-      "reason": "DD may represent due date in AR context, but it can be ambiguous.",
+      "reason": "CR is ambiguous. Using best guess with manual review.",
       "alternatives": [],
       "warningRequired": true,
-      "warningMessage": "Manual review required because DD is ambiguous."
+      "warningMessage": "Manual review required because CR can mean multiple things."
     }
   ]
 }
-
 ```
 
-**AI Suggestion Request: Sheet Mapping**
+### 2. Unified Learning Request (Accepted + Corrected)
+
+Only send rows the admin mapped (accepted or corrected). Do not send null/unmapped rows in this V3 prototype.
+
+```json
+{
+  "module": "COLUMN_MAPPING",
+  "borrowerId": 712,
+  "borrowerName": "Harborline Wholesale",
+  "collateralType": "AR",
+  "fileCategory": "AR Open Items",
+  "workbookName": "harborline-ar-may-2026.xlsx",
+  "promptVersion": "v3-deterministic-001",
+  "decidedBy": "local-test-admin",
+  "decisions": [
+    {
+      "sourceItem": "Ref Num",
+      "decisionType": "ACCEPTED",
+      "suggestionSource": "DETERMINISTIC",
+      "originalSuggestedTargetKey": "DOCUMENT_NUMBER",
+      "originalSuggestedTargetName": "Document Number",
+      "finalTargetKey": "DOCUMENT_NUMBER",
+      "finalTargetName": "Document Number",
+      "confidenceBand": "HIGH",
+      "reason": "Accepted mapping."
+    },
+    {
+      "sourceItem": "Pmt Due Dt",
+      "decisionType": "CORRECTED",
+      "suggestionSource": "LLM",
+      "originalSuggestedTargetKey": "INVOICE_DATE",
+      "originalSuggestedTargetName": "Invoice Date",
+      "finalTargetKey": "DUE_DATE",
+      "finalTargetName": "Due Date",
+      "confidenceBand": "HIGH",
+      "reason": "Corrected: payment due date, not invoice date."
+    }
+  ]
+}
+```
+
+### 2.1 Unified Learning Response (sample)
+
+```json
+{
+  "status": "COMPLETED",
+  "module": "COLUMN_MAPPING",
+  "requestedCount": 2,
+  "learnedCount": 2,
+  "aliasUpdatedCount": 2,
+  "vectorIngestedCount": 2,
+  "failedCount": 0,
+  "learningIds": [
+    "94f3669b-c6b3-4ead-8e6c-982b6df1d897",
+    "5af1b318-0d92-4e74-8b9b-3e1a2c1d0b90"
+  ],
+  "items": [
+    {
+      "sourceItem": "Ref Num",
+      "decisionType": "ACCEPTED",
+      "status": "LEARNED",
+      "vectorLearningId": "94f3669b-c6b3-4ead-8e6c-982b6df1d897",
+      "aliasUpdated": true,
+      "canonicalPhrase": "document number",
+      "aliasesAdded": ["Ref Num"],
+      "errorMessage": null
+    }
+  ]
+}
+```
+
+### 3. Suggestion Request (Sheet Mapping)
 
 ```json
 {
   "module": "SHEET_MAPPING",
-  "borrowerId": 101,
-  "borrowerName": "ABC Foods",
+  "borrowerId": 712,
+  "borrowerName": "Harborline Wholesale",
   "collateralType": "AR",
-  "workbookName": "abc-foods-month-end-pack.xlsx",
+  "workbookName": "harborline-month-end-pack.xlsx",
   "sourceItems": [
-    "AR Aging Jan",
+    "AR Aging May",
     "Stock Summary",
     "Borrowing Base Cert",
-    "Bank Reconciliation",
+    "Bank Recon",
     "Random Notes"
   ],
   "targetItems": [
-    {
-      "key": "AR_LEDGER",
-      "name": "AR Ledger",
-      "dataType": "FILE",
-      "description": "Accounts Receivable Ledger or Aging Report detailing outstanding invoices."
-    },
-    {
-      "key": "INVENTORY_REPORT",
-      "name": "Inventory Report",
-      "dataType": "FILE",
-      "description": "Stock summary or inventory valuation report."
-    },
-    {
-      "key": "BBC_REPORT",
-      "name": "BBC Report",
-      "dataType": "FILE",
-      "description": "Borrowing Base Certificate detailing eligible collateral."
-    },
-    {
-      "key": "BANK_STATEMENT",
-      "name": "Bank Statement",
-      "dataType": "FILE",
-      "description": "Monthly bank statements or reconciliation files."
-    }
+    { "key": "AR_LEDGER", "name": "AR Ledger", "dataType": "FILE", "description": "Accounts receivable ledger or aging report." },
+    { "key": "INVENTORY_REPORT", "name": "Inventory Report", "dataType": "FILE", "description": "Stock summary or inventory valuation report." },
+    { "key": "BBC_REPORT", "name": "BBC Report", "dataType": "FILE", "description": "Borrowing base certificate report." },
+    { "key": "BANK_STATEMENT", "name": "Bank Statement", "dataType": "FILE", "description": "Monthly bank statement or reconciliation." }
   ]
 }
-
 ```
 
-**AI Suggestion Response: Sheet Mapping**
+### 3.1 Suggestion Response (Sheet Mapping, sample)
 
 ```json
 {
   "module": "SHEET_MAPPING",
-  "promptVersion": "v2-rag-001",
+  "promptVersion": "v3-deterministic-001",
   "suggestions": [
     {
-      "sourceItem": "AR Aging Jan",
+      "sourceItem": "AR Aging May",
       "suggestedTargetKey": "AR_LEDGER",
       "suggestedTargetName": "AR Ledger",
       "confidenceBand": "HIGH",
-      "reason": "AR Aging is a standard term for an Accounts Receivable Ledger.",
-      "alternatives": [],
-      "warningRequired": false,
-      "warningMessage": null
-    },
-    {
-      "sourceItem": "Stock Summary",
-      "suggestedTargetKey": "INVENTORY_REPORT",
-      "suggestedTargetName": "Inventory Report",
-      "confidenceBand": "HIGH",
-      "reason": "Stock Summary directly relates to inventory reporting.",
-      "alternatives": [],
-      "warningRequired": false,
-      "warningMessage": null
-    },
-    {
-      "sourceItem": "Borrowing Base Cert",
-      "suggestedTargetKey": "BBC_REPORT",
-      "suggestedTargetName": "BBC Report",
-      "confidenceBand": "HIGH",
-      "reason": "Exact match for Borrowing Base Certificate acronym (BBC).",
-      "alternatives": [],
-      "warningRequired": false,
-      "warningMessage": null
-    },
-    {
-      "sourceItem": "Bank Reconciliation",
-      "suggestedTargetKey": "BANK_STATEMENT",
-      "suggestedTargetName": "Bank Statement",
-      "confidenceBand": "HIGH",
-      "reason": "Bank Reconciliations are typically derived from or act as Bank Statements.",
+      "reason": "Matched by deterministic SYNONYM: ar ledger.",
       "alternatives": [],
       "warningRequired": false,
       "warningMessage": null
@@ -364,140 +417,39 @@ Stores admin-approved and admin-corrected mappings for future RAG retrieval. **O
       "suggestedTargetKey": null,
       "suggestedTargetName": null,
       "confidenceBand": "LOW",
-      "reason": "Random Notes does not map to any standard financial collateral file category.",
+      "reason": "No direct mapping available.",
       "alternatives": [],
       "warningRequired": true,
       "warningMessage": "No suitable mapping found. Manual review required."
     }
   ]
 }
-
 ```
 
----
-
-### 2. AI Learning Payload 
-
-**Learning Request**
+### 4. Unified Learning Request (Sheet Mapping)
 
 ```json
 {
-  "module": "COLUMN_MAPPING",
-  "borrowerId": 304,
-  "borrowerName": "Evergreen Distribution",
+  "module": "SHEET_MAPPING",
+  "borrowerId": 712,
+  "borrowerName": "Harborline Wholesale",
   "collateralType": "AR",
-  "fileCategory": "AR Ledger",
-  "workbookName": "evergreen-ar-open-items.xlsx",
-  "promptVersion": "v2-rag-001",
-  "approvedBy": "local-test-admin",
-  "suggestions": [
+  "workbookName": "harborline-month-end-pack.xlsx",
+  "promptVersion": "v3-deterministic-001",
+  "decidedBy": "local-test-admin",
+  "decisions": [
     {
-      "sourceItem": "Transaction Code",
-      "originalSuggestedTargetKey": "TRANSACTION_TYPE",
-      "originalSuggestedTargetName": "Transaction Type",
-      "acceptedTargetKey": "TRANSACTION_TYPE",
-      "acceptedTargetName": "Transaction Type",
-      "decisionType": "ACCEPTED",
-      "confidenceBand": "LOW",
-      "reason": "Admin confirmed Transaction Code represents transaction type in this AR ledger.",
-      "alternatives": [],
-      "warningRequired": false,
-      "warningMessage": null
-    },
-    {
-      "sourceItem": "Reference No",
-      "originalSuggestedTargetKey": "DOCUMENT_NUMBER",
-      "originalSuggestedTargetName": "Document Number",
-      "acceptedTargetKey": "DOCUMENT_NUMBER",
-      "acceptedTargetName": "Document Number",
-      "decisionType": "ACCEPTED",
+      "sourceItem": "Bank Recon",
+      "decisionType": "CORRECTED",
+      "suggestionSource": "LLM",
+      "originalSuggestedTargetKey": "BANK_STATEMENT",
+      "originalSuggestedTargetName": "Bank Statement",
+      "finalTargetKey": "BANK_STATEMENT",
+      "finalTargetName": "Bank Statement",
       "confidenceBand": "MEDIUM",
-      "reason": "Admin confirmed Reference No is used as the document number.",
-      "alternatives": [],
-      "warningRequired": false,
-      "warningMessage": null
-    },
-    {
-      "sourceItem": "Credit",
-      "originalSuggestedTargetKey": "CREDIT_AMOUNT",
-      "originalSuggestedTargetName": "Credit Amount",
-      "acceptedTargetKey": "CREDIT_AMOUNT",
-      "acceptedTargetName": "Credit Amount",
-      "decisionType": "ACCEPTED",
-      "confidenceBand": "HIGH",
-      "reason": "Admin confirmed Credit represents credit amount.",
-      "alternatives": [],
-      "warningRequired": false,
-      "warningMessage": null
+      "reason": "Admin confirmed Bank Recon means bank statement or reconciliation pack."
     }
   ]
 }
-
 ```
 
-**Learning Response**
-
-```json
-{
-  "status": "INGESTED",
-  "requestedCount": 3,
-  "ingestedCount": 3,
-  "learningIds": [
-    "7e29b7e4-b13a-4b35-94fb-4af3ce4456a1",
-    "cbda5d4f-40c1-49fd-a99f-507e476b9a3d",
-    "a7b4f52a-64e7-4063-b622-e7aa9927fcde"
-  ]
-}
-
-```
----
-
-## 🧠 RAG Strategy
-
-### Why Per-Source-Item Retrieval?
-
-A single global vector search (e.g., *all sourceItems + all targetItems -> top 8 historical mappings*) is unreliable. If a request has 20 headers, an important mapping might be missed. V2 solves this by performing a vector similarity search for **each individual source item**, retrieving the top 1–2 historical hints specifically for that item.
-
-### Compact RAG Context
-
-Instead of injecting full historical JSON documents into the LLM prompt, the system injects highly compact mapping hints. This keeps the prompt smaller, cheaper, and easier for the LLM to follow:
-
-> *Approved historical mapping hints:*
-> *- Current source item "Transaction Code" is similar to learned "Trx Cd" -> TRANSACTION_TYPE.*
-> *- Current source item "Reference No" is similar to learned "Ref Num" -> DOCUMENT_NUMBER.*
-
----
-
-## 🛡️ Guardrails & Error Handling
-
-To compensate for LLM variability, the application enforces strict contracts via the `SuggestionResponseSanitizer`:
-
-* **JSON Extraction:** Automatically strips markdown formatting (e.g., ```json) to extract raw JSON objects.
-* **1-to-1 Mapping Guarantee:** Ensures the response contains exactly one suggestion per source item.
-* **Hallucination Prevention:** If the LLM invents a target key not present in `targetItems`, the sanitizer drops the key, downgrades the confidence to `LOW`, and flags it for manual review.
-
----
-
-## 🗺️ Roadmap
-
-**Phase 1 — Completed**
-
-* Direct LLM suggestion endpoint.
-* Generic `COLUMN_MAPPING` and `SHEET_MAPPING` support.
-* Strict JSON sanitization and local Ollama integration.
-
-**Phase 2 — Current**
-
-* **RAG-based improvement** using admin-approved mappings.
-* Batch learning endpoint and vector store ingestion.
-* Per-source-item retrieval with compact RAG hints.
-
-**Phase 3 — Next (V3)**
-
-* **Deterministic preprocessing and matching.**
-* Header normalization, abbreviation expansion, and synonym dictionaries.
-* **Skip LLM for high-confidence deterministic matches** to save compute time, sending only unresolved or ambiguous items to the RAG + LLM engine.
-
-```
-
-```
