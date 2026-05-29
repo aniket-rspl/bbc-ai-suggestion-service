@@ -49,6 +49,7 @@ public class NormalizationProperties {
         private double exactMatchScore = 1.0;
         private double normalizedExactScore = 0.95;
         private double synonymScore = 0.92;
+        private double fuzzyMinCandidateScore = 0.75;
     }
 
     @Data

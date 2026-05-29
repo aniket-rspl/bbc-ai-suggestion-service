@@ -27,12 +27,18 @@ public class DeterministicMappingService {
             ExactMatchStrategy exactMatchStrategy,
             NormalizedExactMatchStrategy normalizedExactMatchStrategy,
             SynonymMatchStrategy synonymMatchStrategy,
+            FuzzyMatchStrategy fuzzyMatchStrategy,
             AmbiguityDetector ambiguityDetector,
             DeterministicSuggestionMapper suggestionMapper
     ) {
         this.sourceItemPreprocessor = sourceItemPreprocessor;
         this.targetItemNormalizer = targetItemNormalizer;
-        this.strategies = List.of(exactMatchStrategy, normalizedExactMatchStrategy, synonymMatchStrategy);
+        this.strategies = List.of(
+                exactMatchStrategy,
+                normalizedExactMatchStrategy,
+                synonymMatchStrategy,
+                fuzzyMatchStrategy
+        );
         this.ambiguityDetector = ambiguityDetector;
         this.suggestionMapper = suggestionMapper;
     }

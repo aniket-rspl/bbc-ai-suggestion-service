@@ -27,4 +27,4 @@ server:
 
 bbc:
   ai:
-    prompt-version: v3-deterministic-001
+    prompt-version: v3.3-fuzzy-001

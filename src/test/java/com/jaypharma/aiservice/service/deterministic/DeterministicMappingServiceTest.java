@@ -56,4 +56,23 @@ class DeterministicMappingServiceTest {
 
         assertFalse(result.isPresent());
     }
+
+    @Test
+    void shouldMatchTypoWithFuzzyStrategy() {
+        Optional<SuggestionItemDto> result = deterministicMappingService.matchSourceItem("Documnt Numbr", targets);
+
+        assertTrue(result.isPresent());
+        assertEquals("DOCUMENT_NUMBER", result.get().suggestedTargetKey());
+        assertEquals("HIGH", result.get().confidenceBand());
+        assertTrue(result.get().reason().contains("FUZZY"));
+    }
+
+    @Test
+    void shouldMatchCustomerNameTypoWithFuzzyStrategy() {
+        Optional<SuggestionItemDto> result = deterministicMappingService.matchSourceItem("Custmer Nmae", targets);
+
+        assertTrue(result.isPresent());
+        assertEquals("CUSTOMER_NAME", result.get().suggestedTargetKey());
+        assertEquals("HIGH", result.get().confidenceBand());
+    }
 }

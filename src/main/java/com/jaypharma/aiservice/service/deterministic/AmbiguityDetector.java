@@ -36,6 +36,8 @@ public class AmbiguityDetector {
                 .toList();
 
         DeterministicMatchResult top = sorted.get(0);
+        MatchConfidence baseConfidence = resolveConfidenceFromScore(top);
+
         if (sorted.size() > 1) {
             boolean allSameTarget = sorted.stream()
                     .allMatch(result -> top.targetKey().equals(result.targetKey()));
@@ -45,13 +47,28 @@ public class AmbiguityDetector {
             DeterministicMatchResult second = sorted.get(1);
             double gap = top.score() - second.score();
             if (gap < knowledgeStore.getThresholds().ambiguityGap()) {
-                return MatchConfidence.MEDIUM;
+                return moreConservative(baseConfidence, MatchConfidence.MEDIUM);
             }
         }
-        return top.confidence();
+        return moreConservative(baseConfidence, top.confidence());
     }
 
     public boolean isResolvableHigh(MatchConfidence confidence) {
         return confidence == MatchConfidence.HIGH;
+    }
+
+    private MatchConfidence resolveConfidenceFromScore(DeterministicMatchResult result) {
+        NormalizationKnowledgeStore.NormalizationThresholds thresholds = knowledgeStore.getThresholds();
+        if (result.score() >= thresholds.high()) {
+            return MatchConfidence.HIGH;
+        }
+        if (result.score() >= thresholds.medium()) {
+            return MatchConfidence.MEDIUM;
+        }
+        return MatchConfidence.LOW;
+    }
+
+    private MatchConfidence moreConservative(MatchConfidence first, MatchConfidence second) {
+        return first.ordinal() >= second.ordinal() ? first : second;
     }
 }

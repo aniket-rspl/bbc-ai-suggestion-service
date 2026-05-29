@@ -46,7 +46,8 @@ public interface NormalizationKnowledgeStore {
             double ambiguityGap,
             double exactMatchScore,
             double normalizedExactScore,
-            double synonymScore
+            double synonymScore,
+            double fuzzyMinCandidateScore
     ) {}
 
     record NormalizationMessages(

@@ -317,6 +317,7 @@ bbc:
         exact-match-score: 1.0
         normalized-exact-score: 0.95
         synonym-score: 0.92
+        fuzzy-min-candidate-score: 0.75
 
       messages:
         deterministic-high-reason: "Matched by deterministic {strategy}: {detail}."

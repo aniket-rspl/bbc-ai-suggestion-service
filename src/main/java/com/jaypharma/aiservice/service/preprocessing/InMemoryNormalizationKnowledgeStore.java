@@ -28,7 +28,8 @@ public class InMemoryNormalizationKnowledgeStore implements NormalizationKnowled
                 properties.getThresholds().getAmbiguityGap(),
                 properties.getThresholds().getExactMatchScore(),
                 properties.getThresholds().getNormalizedExactScore(),
-                properties.getThresholds().getSynonymScore()
+                properties.getThresholds().getSynonymScore(),
+                properties.getThresholds().getFuzzyMinCandidateScore()
         );
         this.messages = new NormalizationMessages(
                 properties.getMessages().getDeterministicHighReason(),
